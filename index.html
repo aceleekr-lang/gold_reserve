@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>금찾기 사전예약</title>
+<meta name="description" content="영남루 별빛정원 「영남루에 흩어진 별을 찾아라」 금찾기 사전예약">
+<meta name="theme-color" content="#0f1a33">
+<!-- 공유 미리보기(카톡·문자). 배포 주소가 정해지면 og:image·og:url을 전체 주소로 바꾸면 가장 확실함 (이미지 안내 md 참고) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="금찾기 사전예약 · 영남루에 흩어진 별을 찾아라">
+<meta property="og:description" content="영남루 별빛정원 금찾기 · 10. 18.~11. 8. 주말 · 매주 월 09:00~금 17:00 선착순 사전예약">
+<meta property="og:image" content="og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#0f1a33; --night2:#1b2a52; --gold:#d9b25f; --gold-soft:#f3e5c2;
+    --ink:#1d2433; --ink2:#4a5468; --muted:#7a8396; --line:#e3e6ee;
+    --bg:#f5f6fa; --card:#ffffff; --ok:#1f7a4d; --warn:#b26a00; --bad:#b3261e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+       font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px}
+  header.hero{background:radial-gradient(120% 90% at 80% -10%,#2c3f78 0%,var(--night2) 45%,var(--night) 100%);color:#fff;
+       padding:34px 0 30px;position:relative;overflow:hidden}
+  header.hero:before{content:"";position:absolute;inset:0;pointer-events:none;
+       background-image:radial-gradient(1.6px 1.6px at 12% 30%,#fff9,transparent 60%),radial-gradient(1.2px 1.2px at 30% 70%,#fff7,transparent 60%),
+       radial-gradient(1.8px 1.8px at 55% 20%,#ffe9a8cc,transparent 60%),radial-gradient(1.2px 1.2px at 72% 55%,#fff8,transparent 60%),
+       radial-gradient(1.5px 1.5px at 88% 35%,#fff9,transparent 60%),radial-gradient(1px 1px at 45% 85%,#fff6,transparent 60%)}
+  /* 대표 이미지(hero.jpg)가 있으면 배경으로 깔고 아래쪽을 어둡게 덮어 글씨를 읽히게 함. 없으면 지금 배경 그대로 */
+  .hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%;z-index:0}
+  header.hero.has-img{min-height:250px;display:flex;align-items:flex-end;padding-top:90px}
+  header.hero.has-img:after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+       background:linear-gradient(180deg,#0f1a3300 0%,#0f1a3355 40%,#0f1a33e6 85%,#0f1a33 100%)}
+  header.hero .wrap{position:relative;z-index:1;width:100%}
+  @media (min-width:560px){ header.hero.has-img{min-height:320px} }
+  .eyebrow{display:inline-block;font-size:13px;letter-spacing:.08em;color:var(--gold);border:1px solid #d9b25f66;border-radius:999px;padding:3px 12px;margin-bottom:12px}
+  h1{font-size:26px;line-height:1.3;margin:0 0 6px;font-weight:900;letter-spacing:-.02em}
+  h1 em{font-style:normal;color:var(--gold)}
+  .sub{margin:0;color:#cfd6e8;font-size:15px}
+  .rules{background:var(--card);border-radius:14px;margin:-14px 0 18px;position:relative;box-shadow:0 6px 20px #0f1a3314;padding:16px 18px}
+  .rules h2{font-size:15px;margin:0 0 8px;color:var(--night)}
+  .rules ul{margin:0;padding-left:18px;color:var(--ink2);font-size:14.5px}
+  .rules li{margin:3px 0}
+  .rules b{color:var(--ink)}
+  section{margin:22px 0}
+  .sec-title{font-size:18px;font-weight:700;margin:0 0 10px;color:var(--night)}
+  .days{display:grid;gap:10px}
+  .day{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:8px}
+  .day.sel{border-color:var(--gold);box-shadow:0 0 0 2px #d9b25f55}
+  .day-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .date{font-size:19px;font-weight:700}
+  .date small{font-size:14px;color:var(--muted);font-weight:500;margin-left:4px}
+  .chip{font-size:13px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+  .chip.open{background:#e3f4ea;color:var(--ok)} .chip.full{background:#fde8e6;color:var(--bad)}
+  .chip.upcoming{background:#fff4dc;color:var(--warn)} .chip.closed{background:#eceef3;color:var(--ink2)}
+  .times{font-size:14px;color:var(--ink2)}
+  .bar{height:8px;background:#eceef3;border-radius:999px;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#c99a3c,var(--gold));border-radius:999px}
+  .day-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;color:var(--ink2)}
+  .remain b{color:var(--ink);font-size:16px}
+  button{font:inherit;cursor:pointer;border:0;border-radius:10px}
+  .btn{background:var(--night);color:#fff;font-weight:700;padding:11px 16px;min-height:44px}
+  .btn.gold{background:var(--gold);color:var(--night)}
+  .btn.ghost{background:transparent;color:var(--night);border:1px solid #c9cfdd}
+  .btn.danger{background:#fff;color:var(--bad);border:1px solid #f0c4c0}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.block{width:100%}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 16px}
+  label.f{display:block;font-size:14px;font-weight:700;margin:14px 0 6px;color:var(--ink)}
+  label.f span{color:var(--muted);font-weight:500}
+  input[type=text],input[type=tel],select{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1px solid #c9cfdd;border-radius:10px;background:#fff;color:var(--ink);min-height:46px}
+  input:focus,select:focus,button:focus-visible{outline:3px solid #d9b25f88;outline-offset:1px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .seg button{background:#fff;border:1px solid #c9cfdd;color:var(--ink);padding:10px;min-height:46px;font-weight:500}
+  .seg button[aria-pressed=true]{background:var(--night);border-color:var(--night);color:#fff;font-weight:700}
+  .mem{border-top:1px dashed var(--line);margin-top:14px;padding-top:4px}
+  .mem h4{margin:10px 0 0;font-size:14px;color:var(--ink2)}
+  .consent{background:#f7f8fb;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13.5px;color:var(--ink2);margin-top:16px}
+  .consent dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
+  .consent dt{font-weight:700;color:var(--ink)}
+  .consent dd{margin:0}
+  .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;font-weight:700;font-size:15px}
+  .check input{width:22px;height:22px;margin-top:2px;accent-color:var(--night)}
+  .err{color:var(--bad);font-size:14px;margin-top:10px;min-height:1em}
+  .done{text-align:center}
+  .codes{display:grid;gap:8px;margin:10px 0 4px;text-align:left}
+  .codes .p{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f7f8fb;border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+  .codes .p .who{font-weight:700}
+  .codes .p .who small{display:block;color:var(--muted);font-weight:500;font-size:12.5px}
+  .codes .p .c{font-weight:900;letter-spacing:.14em;font-size:24px;color:var(--night);font-variant-numeric:tabular-nums}
+  .steps{text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px 32px;margin:12px 0;font-size:14.5px;color:var(--ink2)}
+  .steps li{margin:4px 0}
+  .steps b{color:var(--ink)}
+  .mem .pname{margin-top:8px}
+  .code{font-size:46px;font-weight:900;letter-spacing:.18em;color:var(--night);margin:6px 0;font-variant-numeric:tabular-nums}
+  .done .box{background:var(--gold-soft);border-radius:12px;padding:14px;margin:14px 0;text-align:left;font-size:15px}
+  .muted{color:var(--muted);font-size:13.5px}
+  .item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;display:grid;gap:6px}
+  .item .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .item .c{font-weight:900;letter-spacing:.1em;font-size:20px}
+  footer{color:var(--muted);font-size:13px;text-align:center;padding:26px 0 40px;border-top:1px solid var(--line);margin-top:30px}
+  .hidden{display:none !important}
+  .loading{color:var(--muted);font-size:14px;padding:10px 0}
+  @media (min-width:560px){ h1{font-size:30px} }
+</style>
+</head>
+<body>
+<header class="hero">
+  <img class="hero-img" src="hero.jpg" alt="" fetchpriority="high" decoding="async"
+       onload="this.parentNode.classList.add('has-img')" onerror="this.remove()">
+  <div class="wrap">
+    <span class="eyebrow" id="place">영남루 별빛정원</span>
+    <h1 id="title">영남루에 흩어진 별을 찾아라<br><em>금찾기 사전예약</em></h1>
+    <p class="sub" id="period">운영일을 불러오는 중입니다…</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="rules" id="rules">
+    <h2>예약 안내</h2>
+    <ul id="ruleList"><li>불러오는 중…</li></ul>
+  </div>
+
+  <!-- 1. 날짜 선택 -->
+  <section id="secDays">
+    <h2 class="sec-title">① 날짜 선택</h2>
+    <div class="days" id="days"><div class="loading">운영일을 불러오는 중…</div></div>
+  </section>
+
+  <!-- 2. 예약 정보 -->
+  <section id="secForm" class="hidden">
+    <h2 class="sec-title">② 예약 정보 입력</h2>
+    <div class="card">
+      <div class="day-top"><div class="date" id="fDate"></div><button class="btn ghost" type="button" id="btnChange">날짜 변경</button></div>
+      <div class="times" id="fTimes"></div>
+
+      <label class="f" for="name">대표자 이름</label>
+      <input type="text" id="name" autocomplete="name" maxlength="20" placeholder="홍길동">
+      <label class="f" for="phone">휴대폰 번호 <span>(안내 문자 수신용)</span></label>
+      <input type="tel" id="phone" inputmode="tel" autocomplete="tel" maxlength="17" placeholder="010-0000-0000">
+      <div class="row">
+        <div><label class="f" for="birth">출생연도</label>
+          <input type="text" id="birth" inputmode="numeric" maxlength="4" placeholder="예) 1985"></div>
+        <div><label class="f">성별</label>
+          <div class="seg" data-g="rep"><button type="button" data-v="M" aria-pressed="false">남</button><button type="button" data-v="F" aria-pressed="false">여</button></div></div>
+      </div>
+
+      <label class="f" for="party">참여 인원 <span>(대표자 포함)</span></label>
+      <select id="party"></select>
+      <div id="members"></div>
+
+      <div class="consent" id="consent"></div>
+      <label class="check"><input type="checkbox" id="agree"> <span>개인정보 수집·이용에 동의합니다. (필수)</span></label>
+      <div class="err" id="err" role="alert"></div>
+      <button class="btn gold block" type="button" id="btnBook">예약 신청</button>
+    </div>
+  </section>
+
+  <!-- 3. 완료 -->
+  <section id="secDone" class="hidden">
+    <div class="card done">
+      <div class="muted">예약이 완료되었습니다</div>
+      <div class="muted" style="margin-top:6px">예약번호 (한 사람에 하나씩)</div>
+      <div class="code hidden" id="dCode"></div>
+      <div class="codes" id="dCodes"></div>
+      <button class="btn ghost block" type="button" id="btnCopy" style="margin-top:6px">예약번호 전체 복사</button>
+      <div class="box" id="dBox"></div>
+      <ol class="steps" id="dSteps"></ol>
+      <p class="muted">이 화면을 <b>캡처</b>해 두세요. 예약번호는 아래 '예약 조회'에서 이름과 휴대폰 번호로 언제든 다시 확인할 수 있습니다. 동반자에게는 본인 번호를 알려 주세요.</p>
+      <button class="btn ghost block" type="button" id="btnAgain">처음으로</button>
+    </div>
+  </section>
+
+  <!-- 4. 조회·취소 -->
+  <section id="secLookup">
+    <h2 class="sec-title">예약 조회 · 취소</h2>
+    <div class="card">
+      <div class="row">
+        <div><label class="f" for="lName">이름</label><input type="text" id="lName" maxlength="20"></div>
+        <div><label class="f" for="lPhone">휴대폰 번호</label><input type="tel" id="lPhone" inputmode="tel" maxlength="17" placeholder="010-0000-0000"></div>
+      </div>
+      <div class="err" id="lErr" role="alert"></div>
+      <button class="btn block" type="button" id="btnLookup">조회</button>
+      <div id="lResult"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div id="fHost">주최 밀양시</div>
+    <div id="fContact"></div>
+  </div>
+</footer>
+
+<script>
+// ── 접속 설정 (Supabase 프로젝트 공개 키 — 공개용 anon 키라 노출되어도 안전, 모든 판정은 DB 함수에서 처리)
+const SUPABASE_URL = window.RSV_URL || "https://snaldhxucwsaifqrccih.supabase.co";
+const SUPABASE_ANON_KEY = window.RSV_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYWxkaHh1Y3dzYWlmcXJjY2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzIwNjAsImV4cCI6MjEwMzg0ODA2MH0.TUdhun_cBHsool0e2FZOOfznjFoC_u5B0MJCl1dTDhI";
+
+async function rpc(fn, args){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}` },
+    body: JSON.stringify(args || {})
+  });
+  if(!res.ok){ throw new Error("서버 연결에 실패했습니다. 잠시 후 다시 시도해 주세요."); }
+  return res.json();
+}
+
+const $ = id => document.getElementById(id);
+const WD = ["일","월","화","수","목","금","토"];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+function dLabel(iso){ const [y,m,d] = iso.split("-").map(Number); const w = new Date(Date.UTC(y,m-1,d)).getUTCDay(); return `${m}. ${d}.(${WD[w]})`; }
+function tLabel(ts){ // timestamptz → KST "10. 19.(월) 09:00"
+  const k = new Date(new Date(ts).getTime() + 9*3600e3);
+  const iso = k.toISOString(); return `${dLabel(iso.slice(0,10))} ${iso.slice(11,16)}`;
+}
+function fmtPhone(v){ let d = v.replace(/\D/g,""); if(/^82(1\d)/.test(d)) d = "0" + d.slice(2); d = d.slice(0,11);  // +82 10… 자동완성 대응
+  return d.length<4 ? d : d.length<8 ? `${d.slice(0,3)}-${d.slice(3)}` : d.length<11 ? `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}` : `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`; }
+function timesText(d){
+  const p = [];
+  if(d.booth_time) p.push(`부대부스 ${d.booth_time}`);
+  if(d.event_time) p.push(`금찾기 ${d.event_time} 시작`);
+  if(d.last_entry) p.push(`최종 입장 ${d.last_entry}`);
+  if(d.end_time) p.push(`${d.end_time} 종료`);
+  return p.join(" · ");
+}
+
+let INFO = null, SEL = null;
+
+async function load(){
+  try{
+    INFO = await rpc("rsv_public_days");
+  }catch(e){ $("days").innerHTML = `<div class="err">접속자가 많아 운영일을 불러오지 못했습니다. 30초 뒤 자동으로 다시 불러옵니다.</div>`; return; }
+  $("place").textContent = INFO.place;
+  $("title").innerHTML = `${esc(INFO.title)}<br><em>금찾기 사전예약</em>`;
+  document.title = `금찾기 사전예약 · ${INFO.title}`;
+  $("fHost").textContent = `주최 ${INFO.host}`;
+  $("fContact").textContent = `문의 ${INFO.contact} · 전화 예약은 받지 않습니다`;
+  const days = INFO.days;
+  if(days.length){ $("period").textContent = `${dLabel(days[0].op_date)} ~ ${dLabel(days[days.length-1].op_date)} · 운영일 ${days.length}일`; }
+  else { $("period").textContent = "예정된 운영일이 없습니다."; }
+  const cap = days.length ? Math.max(...days.map(d=>d.capacity)) : 500;
+  $("ruleList").innerHTML = [
+    `금찾기는 <b>100% 사전예약제</b>로 운영합니다. <b>당일 예약은 받지 않습니다.</b>`,
+    `접수: <b>매주 월요일 09:00 ~ 금요일 17:00</b> (그 주 토·일 운영분)`,
+    `운영일별 <b>선착순 ${cap.toLocaleString()}명</b>, 1건에 <b>최대 ${INFO.max_party}명</b>까지 (대표자는 ${INFO.min_age}세 이상, 출생연도 기준)`,
+    `같은 휴대폰 번호로 하루 1건 예약할 수 있으며, 토·일 각각 예약할 수 있습니다.`,
+    `취소는 접수 마감(금 17:00) 전까지 가능하며, 취소된 자리는 바로 다시 열립니다.`,
+    `예약하면 <b>한 사람에 예약번호 6자리가 하나씩</b> 나옵니다. 현장에서 각자 본인 번호를 입력해 시작합니다(1인 1일 1회).`,
+    `현장 순서: <b>별빛정원 입장권</b>으로 입장 → 입구 시작 표식에 휴대폰 접촉 → 본인 예약번호 입력`
+  ].map(t=>`<li>${t}</li>`).join("");
+  renderDays();
+  $("consent").innerHTML = `<dl>
+    <dt>수집 항목</dt><dd>대표자 이름·휴대폰 번호·출생연도·성별, 동반자 이름·출생연도·성별</dd>
+    <dt>이용 목적</dt><dd>사전예약 확인, 행사 안내 문자 발송, 참여 통계 작성</dd>
+    <dt>보유 기간</dt><dd>행사 종료 후 이름·휴대폰 번호 파기 (출생연도·성별은 개인을 알아볼 수 없는 통계로만 보관)</dd>
+    <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 거부하면 예약할 수 없습니다.</dd>
+    <dt>접속 기록</dt><dd>매크로 등 부정 예약 방지를 위해 접속 IP를 알아볼 수 없게 변환한 값만 이틀간 보관 후 자동 삭제합니다.</dd></dl>`;
+  const ps = $("party"); ps.innerHTML = "";
+  for(let i=1;i<=INFO.max_party;i++){ ps.insertAdjacentHTML("beforeend", `<option value="${i}">${i}명</option>`); }
+  renderMembers();
+}
+
+function renderDays(){
+  const box = $("days");
+  if(!INFO.days.length){ box.innerHTML = `<div class="card muted">예정된 운영일이 없습니다.</div>`; return; }
+  box.innerHTML = INFO.days.map(d => {
+    const pct = d.capacity ? Math.min(100, Math.round(d.reserved / d.capacity * 100)) : 100;
+    const chip = { open:"접수중", full:"마감(정원)", upcoming:"접수 예정", closed:"접수 마감" }[d.status] || d.status;
+    let foot;
+    if(d.status === "open") foot = `<span class="remain">잔여 <b>${d.remaining.toLocaleString()}</b> / ${d.capacity.toLocaleString()}명</span>
+        <button class="btn" type="button" data-pick="${d.op_date}">이 날 예약</button>`;
+    else if(d.status === "upcoming") foot = `<span>${tLabel(d.open_at)} 접수 시작</span>`;
+    else if(d.status === "full") foot = `<span>정원이 찼습니다. 취소가 나오면 다시 열립니다.</span>`;
+    else foot = `<span>접수가 마감되었습니다.</span>`;
+    return `<div class="day ${SEL===d.op_date?'sel':''}">
+      <div class="day-top"><div class="date">${dLabel(d.op_date)}${d.note?`<small>${esc(d.note)}</small>`:""}</div><span class="chip ${d.status}">${chip}</span></div>
+      <div class="times">${esc(timesText(d))}</div>
+      ${d.status==="upcoming" ? "" : `<div class="bar" aria-label="예약 ${pct}%"><i style="width:${pct}%"></i></div>`}
+      <div class="day-foot">${foot}</div></div>`;
+  }).join("");
+  box.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => pick(b.dataset.pick)));
+}
+
+function pick(date){
+  SEL = date; const d = INFO.days.find(x => x.op_date === date);
+  $("fDate").textContent = dLabel(date); $("fTimes").textContent = timesText(d);
+  $("secForm").classList.remove("hidden"); $("secDone").classList.add("hidden");
+  $("err").textContent = ""; renderDays();
+  $("secForm").scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function segBind(root){
+  root.querySelectorAll(".seg").forEach(seg => seg.querySelectorAll("button").forEach(b => b.onclick = () => {
+    seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  }));
+}
+function segVal(seg){ const b = seg.querySelector('[aria-pressed="true"]'); return b ? b.dataset.v : ""; }
+
+function renderMembers(){
+  const n = Number($("party").value || 1) - 1, box = $("members");
+  const keep = [...box.querySelectorAll(".mem")].map((m, i) => ({ n:(m.querySelector(`#mn${i}`) || {}).value, y:m.querySelector(`#my${i}`).value, g:segVal(m.querySelector(".seg")) }));
+  box.innerHTML = Array.from({ length:n }, (_, i) => `<div class="mem"><h4>동반자 ${i+1}</h4>
+      <div class="pname"><label class="f" for="mn${i}">이름 <span>(본인 예약번호가 발급됩니다)</span></label><input type="text" id="mn${i}" maxlength="20" autocomplete="off" placeholder="동반자 이름"></div>
+      <div class="row"><div><label class="f" for="my${i}">출생연도</label><input type="text" id="my${i}" inputmode="numeric" maxlength="4" placeholder="예) 2016"></div>
+      <div><label class="f">성별</label><div class="seg"><button type="button" data-v="M" aria-pressed="false">남</button><button type="button" data-v="F" aria-pressed="false">여</button></div></div></div></div>`).join("");
+  segBind(box);
+  box.querySelectorAll(".mem").forEach((m, i) => { if(keep[i]){ m.querySelector(`#my${i}`).value = keep[i].y; m.querySelector(`#mn${i}`).value = keep[i].n || "";
+    if(keep[i].g) m.querySelector(`[data-v="${keep[i].g}"]`).setAttribute("aria-pressed","true"); } });
+}
+
+async function book(){
+  const err = $("err"); err.textContent = "";
+  const members = [...document.querySelectorAll("#members .mem")].map((m, i) => ({ n:m.querySelector(`#mn${i}`).value.trim(), y:m.querySelector(`#my${i}`).value.trim(), g:segVal(m.querySelector(".seg")) }));
+  const body = { p_date:SEL, p_name:$("name").value.trim(), p_phone:$("phone").value, p_birth:Number($("birth").value) || null,
+                 p_gender:segVal(document.querySelector('.seg[data-g="rep"]')), p_members:members, p_agree:$("agree").checked };
+  if(!body.p_name) return err.textContent = "대표자 이름을 입력해 주세요.";
+  if(body.p_phone.replace(/\D/g,"").length < 10) return err.textContent = "휴대폰 번호를 입력해 주세요.";
+  if(!/^\d{4}$/.test($("birth").value.trim())) return err.textContent = "출생연도 4자리를 입력해 주세요.";
+  if(!body.p_gender) return err.textContent = "대표자 성별을 선택해 주세요.";
+  if(members.some(m => m.n.length < 2)) return err.textContent = "동반자 이름을 입력해 주세요. (사람마다 예약번호가 발급됩니다)";
+  if(members.some(m => !/^\d{4}$/.test(m.y) || !m.g)) return err.textContent = "동반자의 출생연도와 성별을 모두 입력해 주세요.";
+  if(!body.p_agree) return err.textContent = "개인정보 수집·이용에 동의해 주세요.";
+  const btn = $("btnBook"); btn.disabled = true; btn.textContent = "신청 중…";
+  try{
+    const r = await rpc("rsv_book", body);
+    if(!r.ok){ err.textContent = r.msg || "예약할 수 없습니다."; await refreshDays(); return; }
+    $("dCode").textContent = r.code;
+    $("dCodes").innerHTML = (r.members || []).map(m => `<div class="p"><span class="who">${esc(m.name)}<small>${m.seq === 1 ? "대표자" : "동반자"}</small></span><span class="c">${esc(m.code)}</span></div>`).join("");
+    LAST_CODES = (r.members || []).map(m => `${m.name} ${m.code}`).join("\n");
+    $("dBox").innerHTML = `<b>${dLabel(r.op_date)}</b> · ${r.party}명<br>${esc(timesText(r))}<br>
+      <span class="muted">취소는 ${tLabel(r.close_at)}까지 아래 '예약 조회'에서 할 수 있습니다.</span>`;
+    $("dSteps").innerHTML = stepsHtml();
+    $("secForm").classList.add("hidden"); $("secDone").classList.remove("hidden");
+    ["name","phone","birth"].forEach(id => $(id).value = ""); $("agree").checked = false; $("party").value = "1"; renderMembers();
+    document.querySelectorAll('.seg[data-g="rep"] button').forEach(b => b.setAttribute("aria-pressed","false"));
+    SEL = null; await refreshDays();
+    $("secDone").scrollIntoView({ behavior:"smooth", block:"start" });
+  }catch(e){ err.textContent = e.message; }
+  finally{ btn.disabled = false; btn.textContent = "예약 신청"; }
+}
+
+async function refreshDays(){ try{ INFO = { ...INFO, ...(await rpc("rsv_public_days")) }; renderDays(); scheduleOpen(); }catch(e){} }
+// 접수 시작 시각(예: 월 09:00)이 1시간 안이면 그 시각에 맞춰 목록을 다시 불러옴 (서버 시각 기준)
+let openTimer = null;
+function scheduleOpen(){
+  clearTimeout(openTimer); if(!INFO || !INFO.now) return;
+  const skew = new Date(INFO.now).getTime() - Date.now();
+  const next = INFO.days.filter(d => d.status === "upcoming").map(d => new Date(d.open_at).getTime() - skew - Date.now()).filter(ms => ms > 0 && ms < 3600e3).sort((a,b) => a - b)[0];
+  if(next !== undefined) openTimer = setTimeout(refreshDays, next + 1500);
+}
+
+async function lookup(){
+  const e = $("lErr"); e.textContent = ""; $("lResult").innerHTML = "";
+  const name = $("lName").value.trim(), phone = $("lPhone").value;
+  if(!name || phone.replace(/\D/g,"").length < 10) return e.textContent = "이름과 휴대폰 번호를 입력해 주세요.";
+  try{
+    const r = await rpc("rsv_lookup", { p_name:name, p_phone:phone });
+    if(!r.items.length){ $("lResult").innerHTML = `<p class="muted" style="margin-top:12px">예약 내역이 없습니다. 이름과 번호를 확인해 주세요.</p>`; return; }
+    $("lResult").innerHTML = r.items.map(x => `<div class="item">
+      <div class="top"><b>${dLabel(x.op_date)} · ${x.party}명</b><span class="chip ${x.status==='active'?'open':'closed'}">${x.status==='active'?'예약 완료':'취소됨'}</span></div>
+      <div class="codes">${(x.members || []).map(m => `<div class="p"><span class="who">${esc(m.name || "동반자")}<small>${m.seq === 1 ? "대표자" : "동반자"}${m.in ? " · 입장 완료" : ""}</small></span><span class="c">${esc(m.code)}</span></div>`).join("")}</div>
+      <div class="times">${esc(timesText(x))}</div>
+      ${x.status === 'active' ? `<ol class="steps">${stepsHtml()}</ol>` : ""}
+      ${x.cancelable ? `<button class="btn danger" type="button" data-cancel="${x.op_date}|${esc(x.code)}">예약 취소</button>
+         <span class="muted">${tLabel(x.close_at)}까지 취소할 수 있습니다.</span>` : (x.status==='active' ? `<span class="muted">취소 가능 기간이 지났습니다.</span>` : "")}
+    </div>`).join("");
+    $("lResult").querySelectorAll("[data-cancel]").forEach(b => b.onclick = async () => {
+      const [date, code] = b.dataset.cancel.split("|");
+      if(!confirm(`${dLabel(date)} 예약(${code})을 취소할까요?\n취소된 자리는 바로 다른 분께 열립니다.`)) return;
+      b.disabled = true;
+      try{ const c = await rpc("rsv_cancel", { p_date:date, p_code:code, p_name:name, p_phone:phone });
+        if(!c.ok){ e.textContent = c.msg; b.disabled = false; return; }
+        await lookup(); await refreshDays();
+      }catch(x){ e.textContent = x.message; b.disabled = false; }
+    });
+  }catch(x){ e.textContent = x.message; }
+}
+
+let LAST_CODES = "";
+function stepsHtml(){ return `<li><b>별빛정원 입장권</b>을 구매해 입장합니다</li><li>입구 <b>시작 표식</b>에 휴대폰을 댑니다 (NFC 켜기, 아이폰은 저전력 모드 해제)</li><li>화면에 <b>본인 예약번호</b>를 입력하면 시작됩니다. 동반자도 각자 본인 번호로 시작합니다</li>`; }
+$("btnCopy").addEventListener("click", async () => { try{ await navigator.clipboard.writeText(LAST_CODES); $("btnCopy").textContent = "복사했습니다"; setTimeout(() => $("btnCopy").textContent = "예약번호 전체 복사", 1500); }catch(e){ alert(LAST_CODES); } });
+$("party").addEventListener("change", renderMembers);
+$("btnBook").addEventListener("click", book);
+$("btnChange").addEventListener("click", () => { $("secDays").scrollIntoView({ behavior:"smooth" }); });
+$("btnAgain").addEventListener("click", () => { $("secDone").classList.add("hidden"); window.scrollTo({ top:0, behavior:"smooth" }); });
+$("btnLookup").addEventListener("click", lookup);
+["phone","lPhone"].forEach(id => $(id).addEventListener("input", ev => ev.target.value = fmtPhone(ev.target.value)));
+["birth"].forEach(id => $(id).addEventListener("input", ev => ev.target.value = ev.target.value.replace(/\D/g,"").slice(0,4)));
+document.addEventListener("input", ev => { if(ev.target.id && ev.target.id.startsWith("my")) ev.target.value = ev.target.value.replace(/\D/g,"").slice(0,4); });
+segBind(document);
+load().then(scheduleOpen);
+setInterval(() => { if(document.hidden) return; INFO ? refreshDays() : load().then(scheduleOpen); }, 30000);  // 첫 로딩 실패 시 재시도
+</script>
+</body>
+</html>

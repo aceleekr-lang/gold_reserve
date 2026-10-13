@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>금찾기 예약 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{ --night:#0f1a33; --navy:#1f3864; --gold:#d9b25f; --gold-soft:#f6edd6; --ink:#1d2433; --ink2:#4a5468; --muted:#7a8396;
+         --line:#e3e6ee; --bg:#f5f6fa; --card:#fff; --ok:#1f7a4d; --warn:#b26a00; --bad:#b3261e; --bar:#1f3864; --track:#eceef3; }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:15px;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+  header{background:var(--night);color:#fff}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px;flex-wrap:wrap}
+  header b{font-size:17px} header .role{font-size:12px;background:#ffffff1f;border-radius:999px;padding:2px 10px;margin-left:8px}
+  nav.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 max(16px, calc((100% - 1180px) / 2 + 16px));border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:5}
+  nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:13px 14px;font:inherit;font-weight:700;color:var(--ink2);cursor:pointer;white-space:nowrap}
+  nav.tabs button[aria-selected=true]{color:var(--night);border-bottom-color:var(--gold)}
+  main{padding:18px 0 60px}
+  h2{font-size:18px;margin:0 0 12px;color:var(--night)}
+  h3{font-size:15px;margin:0 0 10px;color:var(--night)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+  .kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-bottom:14px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi .l{font-size:13px;color:var(--ink2)} .kpi .v{font-size:26px;font-weight:900;color:var(--night);font-variant-numeric:tabular-nums}
+  .kpi .s{font-size:12.5px;color:var(--muted)}
+  .dayc{cursor:pointer} .dayc:hover{border-color:var(--gold)}
+  .dayc .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .dayc .d{font-size:17px;font-weight:700}
+  .chip{font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .chip.open{background:#e3f4ea;color:var(--ok)} .chip.full{background:#fde8e6;color:var(--bad)}
+  .chip.upcoming{background:#fff4dc;color:var(--warn)} .chip.closed,.chip.off{background:#eceef3;color:var(--ink2)}
+  .chip.cancelled{background:#eceef3;color:var(--ink2)} .chip.active{background:#e3f4ea;color:var(--ok)}
+  .meter{height:8px;background:var(--track);border-radius:4px;overflow:hidden;margin:8px 0 6px}
+  .meter i{display:block;height:100%;background:var(--bar);border-radius:0 4px 4px 0}
+  .small{font-size:13px;color:var(--ink2)} .muted{color:var(--muted);font-size:13px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+  .toolbar label{font-size:12.5px;color:var(--ink2);display:grid;gap:3px}
+  input,select{font:inherit;padding:8px 10px;border:1px solid #c9cfdd;border-radius:8px;background:#fff;color:var(--ink);min-height:40px}
+  input[type=checkbox]{min-height:auto;width:18px;height:18px;accent-color:var(--night)}
+  button.b{font:inherit;font-weight:700;border:0;border-radius:8px;padding:9px 14px;min-height:40px;cursor:pointer;background:var(--night);color:#fff}
+  button.b.gold{background:var(--gold);color:var(--night)} button.b.ghost{background:#fff;color:var(--night);border:1px solid #c9cfdd}
+  button.b.danger{background:#fff;color:var(--bad);border:1px solid #f0c4c0} button.b.sm{padding:5px 10px;min-height:32px;font-size:13px}
+  button.b:disabled{opacity:.45;cursor:not-allowed}
+  .tbl{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff}
+  .tbl th,.tbl td{border-bottom:1px solid var(--line);padding:8px 8px;text-align:left;vertical-align:middle}
+  .tbl th{background:#f7f8fb;color:var(--ink2);font-weight:700;white-space:nowrap;position:sticky;top:0}
+  .tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums}
+  .scroll{overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:10px}
+  .code{font-weight:900;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+  .mem{display:inline-block;background:#f1f3f8;border-radius:6px;padding:1px 6px;margin:1px;font-size:12px}
+  .err{color:var(--bad);font-size:14px;min-height:1em;margin:6px 0}
+  .okmsg{color:var(--ok);font-size:14px;min-height:1em;margin:6px 0}
+  .login{max-width:380px;margin:70px auto}
+  .hidden{display:none !important}
+  /* 현장 확인 */
+  .big-search{font-size:22px;padding:14px;letter-spacing:.06em;width:100%}
+  .fc{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+  .fc .c{font-size:24px}
+  .stepper{display:flex;align-items:center;gap:6px}
+  .stepper button{width:44px;height:44px;font-size:22px;padding:0}
+  .stepper output{min-width:58px;text-align:center;font-size:20px;font-weight:900}
+  /* 막대 목록 (단일 계열) */
+  .bars{display:grid;gap:7px}
+  .brow{display:grid;grid-template-columns:72px 1fr 92px;gap:8px;align-items:center;font-size:13.5px}
+  .brow .t{height:16px;background:var(--track);border-radius:0 4px 4px 0;position:relative}
+  .brow .t i{position:absolute;left:0;top:0;bottom:0;background:var(--bar);border-radius:0 4px 4px 0}
+  .brow .v{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  .cols{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;align-items:end;height:130px;border-bottom:1px solid #c9cfdd;padding-top:6px}
+  .cols i{display:block;background:var(--bar);border-radius:3px 3px 0 0;min-height:1px}
+  .cols i:hover,.brow:hover .t i{background:#c99a3c}
+  .xl{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;font-size:11px;color:var(--muted);text-align:center}
+  .two{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .form-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .form-grid label{font-size:12.5px;color:var(--ink2);display:grid;gap:3px}
+  @media (max-width:640px){ .brow{grid-template-columns:60px 1fr 80px} }
+</style>
+</head>
+<body>
+<header><div class="wrap"><div><b>금찾기 사전예약 관리</b><span class="role hidden" id="role"></span></div>
+  <div><a href="./" target="_blank" style="color:#cfd6e8;font-size:13px;margin-right:12px">예약 페이지 열기</a><button class="b sm ghost hidden" id="btnOut">로그아웃</button></div></div></header>
+
+<div id="vLogin" class="wrap">
+  <div class="card login">
+    <h2>로그인</h2>
+    <p class="small">관리자 키(전체 관리) 또는 현장 PIN(당일 현장 확인)을 입력하세요.</p>
+    <input type="password" id="key" style="width:100%" autocomplete="current-password" placeholder="관리자 키 또는 현장 PIN">
+    <div class="err" id="loginErr"></div>
+    <button class="b" style="width:100%" id="btnLogin">들어가기</button>
+  </div>
+</div>
+
+<div id="vApp" class="hidden">
+  <nav class="tabs" id="tabs"></nav>
+  <main class="wrap">
+    <!-- 현황 -->
+    <section data-tab="ov" class="hidden">
+      <div class="toolbar"><h2 style="margin:0;flex:1">운영일별 예약 현황</h2><button class="b ghost sm" data-reload>새로고침</button></div>
+      <div class="kpis" id="ovKpis"></div>
+      <div class="grid" id="ovDays"></div>
+    </section>
+
+    <!-- 명단 -->
+    <section data-tab="list" class="hidden">
+      <h2>예약자 명단</h2>
+      <div class="toolbar">
+        <label>운영일<select id="lDate"></select></label>
+        <label>상태<select id="lStatus"><option value="active">예약 완료</option><option value="cancelled">취소</option><option value="all">전체</option></select></label>
+        <label>검색 (예약번호·이름·번호 뒷4자리)<input id="lQ" placeholder="검색어"></label>
+        <button class="b" id="btnLSearch">조회</button>
+        <span style="flex:1"></span>
+        <button class="b gold" id="btnXlsDay">이 날 명단 엑셀</button>
+      </div>
+      <div class="small" id="lSum" style="margin-bottom:8px"></div>
+      <div class="scroll"><table class="tbl" id="lTbl"></table></div>
+      <div class="card" style="margin-top:14px">
+        <h3>기간 명단 엑셀 (문자 발송용)</h3>
+        <div class="toolbar" style="margin:0">
+          <label>시작<input type="date" id="xFrom"></label><label>끝<input type="date" id="xTo"></label>
+          <label style="grid-auto-flow:column;align-items:center;gap:6px"><input type="checkbox" id="xCancel"> 취소 포함</label>
+          <button class="b gold" id="btnXlsRange">엑셀 받기</button>
+        </div>
+        <p class="muted" style="margin:8px 0 0">이름·휴대폰 번호가 들어 있는 파일입니다. 문자 발송 후에는 PC에서 삭제해 주세요.</p>
+      </div>
+    </section>
+
+    <!-- 문자 문안 -->
+    <section data-tab="sms" class="hidden">
+      <h2>안내 문자 문안 (복사해서 시 문자 시스템에 붙여 넣기)</h2>
+      <div class="toolbar">
+        <label>운영일<select id="smsDate"></select></label>
+        <button class="b" id="btnSmsGen">문안 만들기</button>
+      </div>
+      <div class="two">
+        <div class="card">
+          <h3>문자 본문 <span class="muted" id="smsBytes"></span></h3>
+          <textarea id="smsText" rows="11" style="width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:8px"></textarea>
+          <div class="toolbar" style="margin:8px 0 0"><button class="b gold" id="btnSmsCopy">본문 복사</button><span class="small muted">예약번호는 사람마다 달라 문자에 넣지 않습니다. 예약자는 예약 페이지 '예약 조회'에서 본인 번호를 봅니다.</span></div>
+        </div>
+        <div class="card">
+          <h3>수신 번호 <span class="muted" id="smsCount"></span></h3>
+          <textarea id="smsPhones" rows="11" style="width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:8px" readonly></textarea>
+          <div class="toolbar" style="margin:8px 0 0"><button class="b gold" id="btnSmsPhones">번호 복사</button><span class="small muted">그 날 유효 예약의 대표자 번호(중복 제거, 줄바꿈 구분). 엑셀이 필요하면 명단 탭에서 받습니다.</span></div>
+        </div>
+      </div>
+      <p class="small muted" style="margin-top:10px">문안 틀은 <b>설정</b> 탭에서 바꿀 수 있습니다. 자리표시: {날짜} {시작} {최종입장} {종료} {부대부스} {예약페이지} {문의} {행사명}</p>
+    </section>
+
+    <!-- 현장 확인 -->
+    <section data-tab="desk" class="hidden">
+      <div class="toolbar"><h2 style="margin:0;flex:1">현장 확인 · <span id="dDate"></span></h2><button class="b ghost sm" data-reload>새로고침</button></div>
+      <div class="kpis" id="dKpis"></div>
+      <div class="card">
+        <input class="big-search" id="dQ" inputmode="numeric" placeholder="예약번호 6자리 또는 휴대폰 뒷 4자리 · 이름">
+        <p class="muted" style="margin:8px 0 0">금찾기 앱에서 예약번호를 입력하면 입장 인원이 자동으로 올라갑니다. 앱을 쓸 수 없는 경우에만 여기서 직접 처리하세요.</p>
+      </div>
+      <div id="dList"></div>
+    </section>
+
+    <!-- 운영일 -->
+    <section data-tab="days" class="hidden">
+      <h2>운영일 관리</h2>
+      <div class="scroll" style="max-height:none;margin-bottom:14px"><table class="tbl" id="dayTbl"></table></div>
+      <div class="two">
+        <div class="card">
+          <h3 id="dfTitle">운영일 추가·수정</h3>
+          <div class="form-grid">
+            <label>운영일<input type="date" id="df_date"></label>
+            <label>정원(명)<input type="number" id="df_cap" min="0" value="500"></label>
+            <label style="grid-column:1/-1">행사명<input id="df_title" value="영남루에 흩어진 별을 찾아라"></label>
+            <label>접수 시작<input type="datetime-local" id="df_open"></label>
+            <label>접수 마감<input type="datetime-local" id="df_close"></label>
+            <label>부대부스 시작<input id="df_booth" placeholder="19:30"></label>
+            <label>금찾기 시작<input id="df_event" placeholder="20:30"></label>
+            <label>최종 입장<input id="df_last" placeholder="22:00"></label>
+            <label>종료<input id="df_end" placeholder="23:00"></label>
+            <label>비고<input id="df_note"></label>
+            <label style="grid-auto-flow:column;align-items:center;justify-content:start;gap:6px"><input type="checkbox" id="df_on" checked> 사용(예약 페이지 표시)</label>
+          </div>
+          <div class="err" id="dfErr"></div><div class="okmsg" id="dfOk"></div>
+          <button class="b" id="btnDaySave">저장</button> <button class="b ghost" id="btnDayAuto">접수기간 자동(월 09:00~금 17:00)</button>
+        </div>
+        <div class="card">
+          <h3>주말 일괄 추가</h3>
+          <div class="form-grid">
+            <label>시작일<input type="date" id="bk_from"></label><label>종료일<input type="date" id="bk_to"></label>
+            <label style="grid-auto-flow:column;align-items:center;justify-content:start;gap:6px"><input type="checkbox" id="bk_sat" checked> 토</label>
+            <label style="grid-auto-flow:column;align-items:center;justify-content:start;gap:6px"><input type="checkbox" id="bk_sun" checked> 일</label>
+            <label>정원(명)<input type="number" id="bk_cap" value="500"></label>
+            <label>부대부스 시작<input id="bk_booth" placeholder="19:00"></label>
+            <label>금찾기 시작<input id="bk_event" placeholder="19:00"></label>
+            <label>최종 입장<input id="bk_last" placeholder="22:00"></label>
+            <label>종료<input id="bk_end" placeholder="23:00"></label>
+            <label style="grid-column:1/-1">행사명<input id="bk_title" value="영남루에 흩어진 별을 찾아라"></label>
+          </div>
+          <p class="muted">접수 기간은 날짜마다 그 주 월요일 09:00 ~ 금요일 17:00로 자동 설정됩니다.</p>
+          <div class="err" id="bkErr"></div><div class="okmsg" id="bkOk"></div>
+          <button class="b" id="btnBulk">일괄 추가</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 통계 -->
+    <section data-tab="stats" class="hidden">
+      <h2>통계</h2>
+      <div class="toolbar">
+        <label>시작<input type="date" id="sFrom"></label><label>끝<input type="date" id="sTo"></label>
+        <button class="b" id="btnStats">조회</button><span style="flex:1"></span><button class="b gold" id="btnXlsStats">통계 엑셀</button>
+      </div>
+      <div class="kpis" id="sKpis"></div>
+      <div class="card"><h3>운영일별</h3><div class="scroll" style="max-height:none"><table class="tbl" id="sDaily"></table></div></div>
+      <div class="two">
+        <div class="card"><h3>성별 (예약 인원 기준)</h3><div class="bars" id="sGender"></div></div>
+        <div class="card"><h3>연령대 (운영일 기준 나이)</h3><div class="bars" id="sAge"></div></div>
+        <div class="card"><h3>1건당 인원</h3><div class="bars" id="sParty"></div></div>
+        <div class="card"><h3>예약 요일 (신청 시점)</h3><div class="bars" id="sWeek"></div></div>
+      </div>
+      <div class="card"><h3>예약 신청 시간대 (0~23시)</h3><div class="cols" id="sHour"></div><div class="xl" id="sHourX"></div>
+        <p class="muted" style="margin:8px 0 0">막대에 마우스를 올리면 건수가 보입니다. 접수 시작 직후 몰림을 확인해 서버·안내 계획에 활용하세요.</p></div>
+    </section>
+
+    <!-- 설정 -->
+    <section data-tab="set" class="hidden">
+      <h2>설정</h2>
+      <div class="two">
+        <div class="card"><h3>예약 규칙·표시 정보</h3>
+          <div class="form-grid">
+            <label>1건 최대 인원<input type="number" id="st_party" min="1" max="10"></label>
+            <label>대표자 최소 나이(만)<input type="number" id="st_age" min="0" max="30"></label>
+            <label style="grid-column:1/-1">행사명<input id="st_title"></label>
+            <label style="grid-column:1/-1">장소<input id="st_place"></label>
+            <label style="grid-column:1/-1">주최<input id="st_host"></label>
+            <label style="grid-column:1/-1">문의<input id="st_contact"></label>
+            <label style="grid-column:1/-1">안내 문자 문안 틀 <span class="muted">({날짜} {시작} {최종입장} {종료} {부대부스} {예약페이지} {문의} {행사명} 자리표시 사용)</span>
+              <textarea id="st_sms" rows="8" style="width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:8px"></textarea></label>
+          </div>
+          <div class="err" id="stErr"></div><div class="okmsg" id="stOk"></div>
+          <button class="b" id="btnSet">저장</button>
+        </div>
+        <div class="card"><h3>키 변경</h3>
+          <div class="form-grid">
+            <label>대상<select id="kWhich"><option value="staff">현장 PIN</option><option value="admin">관리자 키</option></select></label>
+            <label>새 값 (PIN 6자·관리자 키 8자 이상)<input type="password" id="kNew" autocomplete="new-password"></label>
+          </div>
+          <div class="err" id="kErr"></div><div class="okmsg" id="kOk"></div>
+          <button class="b" id="btnKey">변경</button>
+          <h3 style="margin-top:22px">부정 사용 방지</h3>
+          <p class="small" id="guard">-</p>
+          <p class="small muted">같은 인터넷 연결에서 10분 6건·하루 20건 넘게 예약하면 막고, 키·PIN을 10분에 10번 틀리면 그 연결은 10분간 로그인할 수 없습니다. 명단의 ‘같은 접속 N건’ 표시는 매크로 의심 예약을 찾는 데 씁니다.</p>
+          <h3 style="margin-top:22px">개인정보 파기</h3>
+          <p class="small">선택한 날짜까지의 지난 운영일 예약자 <b>이름·휴대폰 번호를 삭제</b>합니다. 출생연도·성별·인원은 통계로 남습니다. 되돌릴 수 없습니다.</p>
+          <div class="toolbar" style="margin:0"><label>이 날짜까지<input type="date" id="pTo"></label><button class="b danger" id="btnPurge">파기 실행</button></div>
+          <div class="err" id="pErr"></div><div class="okmsg" id="pOk"></div>
+        </div>
+      </div>
+      <div class="card"><h3>관리 이력</h3><div class="scroll"><table class="tbl" id="logTbl"></table></div></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL = window.RSV_URL || "https://snaldhxucwsaifqrccih.supabase.co";
+const SUPABASE_ANON_KEY = window.RSV_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYWxkaHh1Y3dzYWlmcXJjY2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzIwNjAsImV4cCI6MjEwMzg0ODA2MH0.TUdhun_cBHsool0e2FZOOfznjFoC_u5B0MJCl1dTDhI";
+async function rpc(fn, args){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method:"POST",
+    headers:{ "Content-Type":"application/json", apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}` },
+    body: JSON.stringify(args || {}) });
+  if(!res.ok) throw new Error("서버 연결에 실패했습니다.");
+  return res.json();
+}
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const WD = ["일","월","화","수","목","금","토"];
+const n0 = v => Number(v || 0).toLocaleString();
+const pct = (a,b) => b ? Math.round(a / b * 1000) / 10 : 0;
+function dLabel(iso){ const [y,m,d] = iso.split("-").map(Number); return `${m}. ${d}.(${WD[new Date(Date.UTC(y,m-1,d)).getUTCDay()]})`; }
+function kst(ts){ if(!ts) return ""; const s = new Date(new Date(ts).getTime() + 9*3600e3).toISOString(); return `${s.slice(0,10)} ${s.slice(11,16)}`; }
+function kstS(ts){ if(!ts) return ""; const s = new Date(new Date(ts).getTime() + 9*3600e3).toISOString(); return `${s.slice(0,10)} ${s.slice(11,19)}`; }
+function kstInput(ts){ if(!ts) return ""; return new Date(new Date(ts).getTime() + 9*3600e3).toISOString().slice(0,16); }
+const toTs = v => v ? `${v}:00+09:00` : null;
+const G = { M:"남", F:"여" };
+const ST = { open:"접수중", full:"마감(정원)", upcoming:"접수 예정", closed:"접수 마감", off:"사용 안 함" };
+
+// 버튼 처리 중 통신 오류가 나면 조용히 멈추지 않고 알림
+window.addEventListener("unhandledrejection", e => { const m = e.reason && e.reason.message || "처리 중 오류가 발생했습니다."; toast(m + " 다시 시도해 주세요."); });
+function toast(m){ let t = $("toast"); if(!t){ t = document.createElement("div"); t.id = "toast"; t.setAttribute("role","alert");
+  t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#b3261e;color:#fff;padding:12px 18px;border-radius:10px;font-weight:700;z-index:99;max-width:90vw;box-shadow:0 6px 20px #0003";
+  document.body.appendChild(t); } t.textContent = m; t.style.display = "block"; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = "none", 5000); }
+let KEY = "", ROLE = null, OV = null, GUARD = null;
+try{ KEY = sessionStorage.getItem("rsv_key") || ""; }catch(e){}
+
+async function login(k){
+  $("loginErr").textContent = "";
+  try{
+    const r = await rpc("rsv_auth", { p_key:k });
+    if(!r.role){ $("loginErr").textContent = r.locked ? "잘못된 입력이 많아 10분 동안 로그인할 수 없습니다." : "키가 올바르지 않습니다."; return; }
+    KEY = k; ROLE = r.role; GUARD = !!r.guard; try{ sessionStorage.setItem("rsv_key", k); }catch(e){}
+    $("vLogin").classList.add("hidden"); $("vApp").classList.remove("hidden");
+    $("role").textContent = ROLE === "admin" ? "관리자" : "현장"; $("role").classList.remove("hidden"); $("btnOut").classList.remove("hidden");
+    buildTabs(); await loadOverview(); show(ROLE === "admin" ? "ov" : "desk");
+  }catch(e){ $("loginErr").textContent = e.message; }
+}
+function logout(){ try{ sessionStorage.removeItem("rsv_key"); }catch(e){} location.reload(); }
+
+const TABS = [["ov","현황"],["list","명단"],["sms","문자"],["desk","현장 확인"],["days","운영일"],["stats","통계"],["set","설정"]];
+function buildTabs(){
+  const t = ROLE === "admin" ? TABS : TABS.filter(x => x[0] === "desk");
+  $("tabs").innerHTML = t.map(([k,l]) => `<button role="tab" data-k="${k}">${l}</button>`).join("");
+  $("tabs").querySelectorAll("button").forEach(b => b.onclick = () => show(b.dataset.k));
+}
+function show(k, date){
+  document.querySelectorAll("section[data-tab]").forEach(s => s.classList.toggle("hidden", s.dataset.tab !== k));
+  $("tabs").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.k === k));
+  if(k === "ov") renderOverview();
+  if(k === "list") { fillDateSelect(); if(date) $("lDate").value = date; loadList(); }
+  if(k === "sms") initSms();
+  if(k === "desk") renderDesk();
+  if(k === "days") renderDays();
+  if(k === "stats") { if(!$("sFrom").value) initStatRange(); loadStats(); }
+  if(k === "set") loadSettings();
+}
+
+async function loadOverview(){
+  const r = await rpc("rsv_admin_overview", { p_key:KEY });
+  if(!r.ok){ alert(r.msg); return logout(); }
+  OV = r;
+}
+function renderOverview(){
+  const days = OV.days, today = OV.today;
+  const up = days.filter(d => d.op_date >= today);
+  const tot = up.reduce((a,d) => ({ cap:a.cap + d.capacity, p:a.p + d.persons, b:a.b + d.bookings, c:a.c + d.cancelled_persons }), { cap:0, p:0, b:0, c:0 });
+  $("ovKpis").innerHTML = [
+    ["남은 운영일", up.length + "일", ""],
+    ["예약 인원 (남은 운영일)", n0(tot.p) + "명", `정원 ${n0(tot.cap)}명 중 ${pct(tot.p, tot.cap)}%`],
+    ["예약 건수", n0(tot.b) + "건", ""],
+    ["취소 인원", n0(tot.c) + "명", "취소분은 즉시 재오픈"]
+  ].map(([l,v,s]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+  $("ovDays").innerHTML = days.map(d => `<div class="card dayc" data-d="${d.op_date}">
+      <div class="top"><span class="d">${dLabel(d.op_date)}</span><span class="chip ${d.status}">${ST[d.status] || d.status}</span></div>
+      <div class="meter" title="${n0(d.persons)} / ${n0(d.capacity)}명"><i style="width:${Math.min(100, pct(d.persons, d.capacity))}%"></i></div>
+      <div class="small"><b>${n0(d.persons)}</b> / ${n0(d.capacity)}명 · ${n0(d.bookings)}건 · 취소 ${n0(d.cancelled_persons)}명 · 입장 ${n0(d.checked_in)}명</div>
+      <div class="muted">접수 ${kst(d.open_at)} ~ ${kst(d.close_at)}</div></div>`).join("") || `<p class="muted">운영일이 없습니다.</p>`;
+  $("ovDays").querySelectorAll("[data-d]").forEach(c => c.onclick = () => show("list", c.dataset.d));
+}
+
+function fillDateSelect(){
+  const sel = $("lDate"), cur = sel.value;
+  sel.innerHTML = OV.days.map(d => `<option value="${d.op_date}">${dLabel(d.op_date)} (${n0(d.persons)}명)</option>`).join("");
+  const def = OV.days.find(d => d.op_date >= OV.today) || OV.days[OV.days.length - 1];
+  sel.value = cur || (def ? def.op_date : "");
+  if(!$("xFrom").value && OV.days.length){ $("xFrom").value = sel.value; $("xTo").value = sel.value; }
+}
+let LIST = [], LIST_SEQ = 0;
+async function loadList(){
+  const date = $("lDate").value; if(!date) return;
+  const seq = ++LIST_SEQ;
+  const r = await rpc("rsv_admin_list", { p_key:KEY, p_date:date, p_q:$("lQ").value.trim() || null });
+  if(seq !== LIST_SEQ) return;   // 다른 날짜를 고른 뒤 늦게 도착한 응답은 버림
+  if(!r.ok){ $("lSum").textContent = r.msg; return; }
+  LIST = r.items; const f = $("lStatus").value;
+  const rows = LIST.filter(x => f === "all" || x.status === f);
+  const act = LIST.filter(x => x.status === "active");
+  $("lSum").textContent = `${dLabel(date)} · 예약 ${act.length}건 ${n0(act.reduce((a,x)=>a+x.party,0))}명 · 입장 ${n0(act.reduce((a,x)=>a+x.checked_in,0))}명 · 표시 ${rows.length}건`;
+  $("lTbl").innerHTML = `<thead><tr><th>#</th><th>예약번호</th><th>이름</th><th>휴대폰</th><th class="n">인원</th><th>구성(출생연도·성별)</th><th>신청 시각</th><th>상태</th><th class="n">입장</th><th></th></tr></thead><tbody>${
+    rows.map((x,i) => `<tr><td>${i+1}</td><td class="code">${esc(x.code)}</td><td>${x.purged ? '<span class="muted">파기됨</span>' : esc(x.name)}${x.same_src >= 3 ? ` <span class="chip full" title="같은 인터넷 연결에서 들어온 예약 수(매크로 의심 시 확인)">같은 접속 ${x.same_src}건</span>` : ""}</td><td>${esc(x.phone || "")}</td>
+      <td class="n">${x.party}</td><td>${(x.members||[]).map(m => `<span class="mem" title="${m.in ? "입장 " + kst(m.in_at) : "미입장"}">${esc(m.n || "동반자")} ${m.y}·${G[m.g]} <b class="code">${esc(m.code || "")}</b>${m.in ? " ✓" : ""}</span>`).join(" ")}</td>
+      <td>${kst(x.created_at)}</td><td><span class="chip ${x.status}">${x.status === "active" ? "예약" : "취소" + (x.cancelled_by === "admin" ? "(관리자)" : "")}</span></td>
+      <td class="n">${x.checked_in}</td>
+      <td>${x.status === "active" ? `<button class="b sm danger" data-cx="${x.id}">취소</button>` : `<button class="b sm ghost" data-rs="${x.id}">복구</button>`}</td></tr>`).join("")
+    }</tbody>`;
+  $("lTbl").querySelectorAll("[data-cx]").forEach(b => b.onclick = () => adminCancel(b.dataset.cx, false));
+  $("lTbl").querySelectorAll("[data-rs]").forEach(b => b.onclick = () => adminCancel(b.dataset.rs, true));
+}
+async function adminCancel(id, restore){
+  if(!confirm(restore ? "이 예약을 복구할까요?" : "이 예약을 관리자 권한으로 취소할까요? 자리는 바로 다시 열립니다.")) return;
+  const r = await rpc("rsv_admin_cancel", { p_key:KEY, p_id:Number(id), p_restore:restore });
+  if(!r.ok) alert(r.msg);
+  await loadOverview(); await loadList();
+}
+
+// ── 엑셀
+function membersText(ms){ return (ms || []).slice(1).map(m => `${m.n || "동반자"}(${m.y}/${G[m.g]}/${m.code || ""})`).join(", "); }
+function personRows(items){
+  return items.flatMap(x => (x.members || []).map(m => ({ "운영일":x.op_date, "이름":m.n || (m.seq === 1 ? x.name : "동반자"), "구분":m.seq === 1 ? "대표자" : "동반자",
+    "출생연도":m.y, "성별":G[m.g], "예약번호":m.code || "", "대표자 휴대폰":x.phone || "", "예약 상태":x.status === "active" ? "예약" : "취소", "입장":m.in ? "입장" : "", "입장 시각":kstS(m.in_at) })));
+}
+function rowsForXls(items){
+  return items.map(x => ({ "운영일":x.op_date, "예약번호":x.code, "이름":x.name || "(파기됨)", "휴대폰":x.phone || "", "인원":x.party,
+    "대표자 출생연도":x.members?.[0]?.y ?? "", "대표자 성별":G[x.members?.[0]?.g] ?? "", "동반자(출생연도/성별)":membersText(x.members),
+    "상태":x.status === "active" ? "예약" : "취소", "신청 시각":kstS(x.created_at), "취소 시각":kstS(x.cancelled_at), "입장 인원":x.checked_in }));
+}
+function saveXls(sheets, name){
+  if(!window.XLSX){ alert("엑셀 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요."); return; }
+  const wb = XLSX.utils.book_new();
+  sheets.forEach(([title, rows]) => { const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ "내용":"자료 없음" }]);
+    ws["!cols"] = Object.keys(rows[0] || { a:1 }).map(k => ({ wch: Math.max(8, k.length * 2 + 2) })); XLSX.utils.book_append_sheet(wb, ws, title); });
+  XLSX.writeFile(wb, name);
+}
+async function exportRange(from, to, cancelled){
+  const r = await rpc("rsv_admin_export", { p_key:KEY, p_from:from, p_to:to, p_include_cancelled:cancelled });
+  if(!r.ok) return alert(r.msg);
+  saveXls([["예약명단", rowsForXls(r.items)], ["개인별 예약번호", personRows(r.items)]], `금찾기_예약명단_${from}${from === to ? "" : "_" + to}.xlsx`);
+}
+
+// ── 현장 확인
+async function renderDesk(){
+  $("dDate").textContent = dLabel(OV.today);
+  const d = OV.days.find(x => x.op_date === OV.today);
+  $("dKpis").innerHTML = d ? [["예약 인원", n0(d.persons) + "명", `${n0(d.bookings)}건`], ["입장(시작) 인원", n0(d.checked_in) + "명", `예약 대비 ${pct(d.checked_in, d.persons)}%`],
+     ["시간", d.event_time ? `${esc(d.event_time)} 시작` : "-", `최종 입장 ${esc(d.last_entry || "-")}`]].map(([l,v,s]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("")
+     : `<div class="card muted">오늘은 운영일이 아닙니다.</div>`;
+  await deskSearch();
+}
+let deskTimer = null;
+async function deskSearch(){
+  const q = $("dQ").value.trim();
+  if(q.length < 2){ $("dList").innerHTML = `<p class="muted">검색어를 2자 이상 입력하세요.</p>`; return; }
+  const r = await rpc("rsv_admin_list", { p_key:KEY, p_date:OV.today, p_q:q });
+  if(!r.ok){ $("dList").innerHTML = `<div class="err">${esc(r.msg)}</div>`; return; }
+  const items = r.items.filter(x => x.status === "active");
+  $("dList").innerHTML = items.map(x => `<div class="card" style="margin-bottom:10px">
+      <div class="small" style="margin-bottom:6px"><b>${esc(x.name || "")}</b> 외 ${x.party - 1}명 · ${esc(x.phone || "")} · 입장 <output id="o${x.id}">${x.checked_in}</output>/${x.party}</div>
+      ${(x.members||[]).map(m => `<div class="fc" style="padding:6px 0;border-top:1px solid var(--line)">
+        <div><span class="code c">${esc(m.code || "")}</span> · <b>${esc(m.n || "동반자")}</b> <span class="muted">${m.seq === 1 ? "대표자" : "동반자"} · ${m.y}·${G[m.g]}</span></div>
+        <button class="b sm ${m.in ? "" : "ghost"}" data-tg="${x.id}|${m.seq}|${m.in ? 0 : 1}">${m.in ? "입장 완료 ✓ (취소)" : "입장 처리"}</button></div>`).join("")}
+      <div style="text-align:right;margin-top:8px"><button class="b sm ghost" data-all="${x.id}">전원 입장(${x.party}명)</button></div></div>`).join("")
+    || `<p class="muted">오늘 예약 중 일치하는 항목이 없습니다.</p>`;
+  // 사람 단위 입장 처리 → 금찾기 앱의 사용 기록과 같은 칸을 쓰므로 충돌 없음
+  const set = async (id, arg) => { const r2 = await rpc("rsv_admin_checkin", { p_key:KEY, p_id:Number(id), ...arg });
+    if(!r2.ok) return alert(r2.msg); await loadOverview(); renderDeskKpis(); };
+  $("dList").querySelectorAll("[data-tg]").forEach(b => b.onclick = () => { const [id, seq, on] = b.dataset.tg.split("|"); set(id, { p_seq:Number(seq), p_in:on === "1" }); });
+  $("dList").querySelectorAll("[data-all]").forEach(b => b.onclick = () => set(b.dataset.all, { p_seq:null, p_in:true }));
+}
+function renderDeskKpis(){ const q = $("dQ").value; renderDesk().then(() => { $("dQ").value = q; }); }
+
+// ── 운영일
+function renderDays(){
+  $("dayTbl").innerHTML = `<thead><tr><th>운영일</th><th>상태</th><th class="n">정원</th><th class="n">예약</th><th>접수 기간</th><th>시간(부스·시작·최종입장·종료)</th><th>행사명</th><th></th></tr></thead><tbody>${
+    OV.days.map(d => `<tr><td>${dLabel(d.op_date)}</td><td><span class="chip ${d.status}">${ST[d.status] || d.status}</span></td><td class="n">${n0(d.capacity)}</td><td class="n">${n0(d.persons)}</td>
+      <td>${kst(d.open_at)} ~ ${kst(d.close_at)}</td><td>${[d.booth_time, d.event_time, d.last_entry, d.end_time].map(v => esc(v || "-")).join(" · ")}</td>
+      <td>${esc(d.title)}${d.note ? ` <span class="muted">(${esc(d.note)})</span>` : ""}</td>
+      <td><button class="b sm ghost" data-ed="${d.op_date}">수정</button> ${d.persons || d.cancelled ? "" : `<button class="b sm danger" data-del="${d.op_date}">삭제</button>`}</td></tr>`).join("")}</tbody>`;
+  $("dayTbl").querySelectorAll("[data-ed]").forEach(b => b.onclick = () => editDay(OV.days.find(d => d.op_date === b.dataset.ed)));
+  $("dayTbl").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+    if(!confirm(`${dLabel(b.dataset.del)} 운영일을 삭제할까요?`)) return;
+    const r = await rpc("rsv_admin_day_delete", { p_key:KEY, p_date:b.dataset.del }); if(!r.ok) alert(r.msg);
+    await loadOverview(); renderDays(); });
+}
+function editDay(d){
+  $("dfTitle").textContent = `운영일 수정 · ${dLabel(d.op_date)}`;
+  $("df_date").value = d.op_date; $("df_cap").value = d.capacity; $("df_title").value = d.title;
+  $("df_open").value = kstInput(d.open_at); $("df_close").value = kstInput(d.close_at);
+  $("df_booth").value = d.booth_time || ""; $("df_event").value = d.event_time || ""; $("df_last").value = d.last_entry || ""; $("df_end").value = d.end_time || "";
+  $("df_note").value = d.note || ""; $("df_on").checked = d.enabled; $("df_date").scrollIntoView({ behavior:"smooth", block:"center" });
+}
+function autoWindow(iso){ // 운영일 직전 금요일 17:00 마감, 그 주 월요일 09:00 시작
+  const [y,m,d] = iso.split("-").map(Number); const t = new Date(Date.UTC(y,m-1,d));
+  let back = (t.getUTCDay() - 5 + 7) % 7; if(back === 0) back = 7;
+  const fri = new Date(t.getTime() - back * 864e5), mon = new Date(fri.getTime() - 4 * 864e5);
+  return { open:`${mon.toISOString().slice(0,10)}T09:00`, close:`${fri.toISOString().slice(0,10)}T17:00` };
+}
+async function saveDay(){
+  $("dfErr").textContent = ""; $("dfOk").textContent = "";
+  const day = { op_date:$("df_date").value, capacity:Number($("df_cap").value), title:$("df_title").value, open_at:toTs($("df_open").value), close_at:toTs($("df_close").value),
+    booth_time:$("df_booth").value, event_time:$("df_event").value, last_entry:$("df_last").value, end_time:$("df_end").value, note:$("df_note").value, enabled:$("df_on").checked };
+  const r = await rpc("rsv_admin_day_upsert", { p_key:KEY, p_day:day });
+  if(!r.ok) return $("dfErr").textContent = r.msg;
+  $("dfOk").textContent = "저장했습니다."; await loadOverview(); renderDays();
+}
+async function bulkAdd(){
+  $("bkErr").textContent = ""; $("bkOk").textContent = "";
+  const from = $("bk_from").value, to = $("bk_to").value; if(!from || !to || from > to) return $("bkErr").textContent = "기간을 확인해 주세요.";
+  const wds = [$("bk_sat").checked ? 6 : -1, $("bk_sun").checked ? 0 : -1];
+  const list = []; for(let t = new Date(from + "T00:00:00Z"); t <= new Date(to + "T00:00:00Z"); t = new Date(t.getTime() + 864e5)) if(wds.includes(t.getUTCDay())) list.push(t.toISOString().slice(0,10));
+  if(!list.length) return $("bkErr").textContent = "해당하는 날짜가 없습니다.";
+  if(!confirm(`${list.length}일을 추가합니다. 이미 있는 날짜는 건드리지 않습니다(수정은 표의 '수정' 버튼).\n${list.map(dLabel).join(", ")}`)) return;
+  let skipped = 0;
+  for(const iso of list){
+    const w = autoWindow(iso);
+    const r = await rpc("rsv_admin_day_upsert", { p_key:KEY, p_day:{ op_date:iso, capacity:Number($("bk_cap").value), title:$("bk_title").value, open_at:toTs(w.open), close_at:toTs(w.close),
+      booth_time:$("bk_booth").value, event_time:$("bk_event").value, last_entry:$("bk_last").value, end_time:$("bk_end").value, enabled:true, only_new:true } });
+    if(!r.ok){ $("bkErr").textContent = `${dLabel(iso)}: ${r.msg}`; break; }
+    if(r.skipped) skipped++;
+  }
+  if(!$("bkErr").textContent) $("bkOk").textContent = `${list.length - skipped}일 추가했습니다.` + (skipped ? ` (이미 있는 ${skipped}일은 그대로 둠)` : "");
+  await loadOverview(); renderDays();
+}
+
+// ── 통계
+function initStatRange(){ if(!OV.days.length) return; $("sFrom").value = OV.days[0].op_date; $("sTo").value = OV.days[OV.days.length - 1].op_date; }
+let STATS = null;
+function barList(el, items, label){
+  const tot = items.reduce((a,x) => a + x.n, 0), max = Math.max(1, ...items.map(x => x.n));
+  el.innerHTML = items.length ? items.map(x => `<div class="brow" title="${esc(label(x.k))}: ${n0(x.n)} (${pct(x.n, tot)}%)">
+      <span>${esc(label(x.k))}</span><span class="t"><i style="width:${x.n / max * 100}%"></i></span><span class="v">${n0(x.n)} · ${pct(x.n, tot)}%</span></div>`).join("")
+    : `<p class="muted">자료가 없습니다.</p>`;
+}
+const ageLabel = k => k === 0 ? "10세 미만" : k >= 70 ? "70대 이상" : `${k}대`;
+async function loadStats(){
+  const r = await rpc("rsv_admin_stats", { p_key:KEY, p_from:$("sFrom").value, p_to:$("sTo").value });
+  if(!r.ok) return alert(r.msg);
+  STATS = r; const t = r.totals, past = r.daily.filter(d => d.op_date < OV.today);
+  const pastP = past.reduce((a,d) => a + d.persons, 0), pastIn = past.reduce((a,d) => a + d.checked_in, 0);
+  $("sKpis").innerHTML = [
+    ["운영일", n0(t.days) + "일", ""], ["예약 인원", n0(t.persons) + "명", `정원 ${n0(t.capacity)}명 대비 ${pct(t.persons, t.capacity)}%`],
+    ["예약 건수", n0(t.bookings) + "건", `1건 평균 ${t.bookings ? (t.persons / t.bookings).toFixed(1) : 0}명`],
+    ["입장 인원", n0(t.checked_in) + "명", past.length ? `지난 운영일 참여율 ${pct(pastIn, pastP)}%` : "운영 전"],
+    ["취소", n0(t.cancelled_persons) + "명", `${n0(t.cancelled)}건`]
+  ].map(([l,v,s]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+  const dur = d => { if(!d.full_at) return "-"; const m = Math.round((new Date(d.full_at) - new Date(d.open_at)) / 6e4); return m < 60 ? `${m}분` : m < 1440 ? `${Math.floor(m/60)}시간 ${m%60}분` : `${Math.floor(m/1440)}일 ${Math.floor(m%1440/60)}시간`; };
+  $("sDaily").innerHTML = `<thead><tr><th>운영일</th><th class="n">정원</th><th class="n">예약 인원</th><th class="n">충원율</th><th class="n">건수</th><th class="n">취소 인원</th><th class="n">입장 인원</th><th class="n">불참(노쇼)</th><th>정원 마감까지</th></tr></thead><tbody>${
+    r.daily.map(d => `<tr><td>${dLabel(d.op_date)}</td><td class="n">${n0(d.capacity)}</td><td class="n">${n0(d.persons)}</td><td class="n">${pct(d.persons, d.capacity)}%</td>
+      <td class="n">${n0(d.bookings)}</td><td class="n">${n0(d.cancelled_persons)}</td><td class="n">${n0(d.checked_in)}</td>
+      <td class="n">${d.op_date < OV.today ? n0(d.persons - d.checked_in) : "-"}</td><td>${dur(d)}</td></tr>`).join("")}</tbody>`;
+  barList($("sGender"), r.gender, k => G[k]);
+  barList($("sAge"), r.age, ageLabel);
+  barList($("sParty"), r.party, k => `${k}명`);
+  barList($("sWeek"), r.weekday.map(x => ({ k:x.k % 7, n:x.n })).sort((a,b) => ((a.k+6)%7) - ((b.k+6)%7)), k => `${WD[k]}요일`);
+  const hours = Array.from({ length:24 }, (_, h) => (r.hour.find(x => x.k === h) || { n:0 }).n), hm = Math.max(1, ...hours);
+  $("sHour").innerHTML = hours.map((v,h) => `<i style="height:${v / hm * 100}%" title="${h}시: ${n0(v)}건"></i>`).join("");
+  $("sHourX").innerHTML = hours.map((_,h) => `<span>${h % 3 === 0 ? h : ""}</span>`).join("");
+}
+function exportStats(){
+  if(!STATS) return;
+  saveXls([
+    ["운영일별", STATS.daily.map(d => ({ "운영일":d.op_date, "정원":d.capacity, "예약 인원":d.persons, "충원율(%)":pct(d.persons, d.capacity), "예약 건수":d.bookings,
+       "취소 건수":d.cancelled, "취소 인원":d.cancelled_persons, "입장 인원":d.checked_in, "첫 예약":kstS(d.first_at), "정원 마감 시각":kstS(d.full_at) }))],
+    ["성별", STATS.gender.map(x => ({ "성별":G[x.k], "인원":x.n }))],
+    ["연령대", STATS.age.map(x => ({ "연령대":ageLabel(x.k), "인원":x.n }))],
+    ["1건당 인원", STATS.party.map(x => ({ "인원":`${x.k}명`, "건수":x.n }))],
+    ["신청 시간대", STATS.hour.map(x => ({ "시":x.k, "건수":x.n }))],
+    ["신청 요일", STATS.weekday.map(x => ({ "요일":`${WD[x.k % 7]}요일`, "건수":x.n }))]
+  ], `금찾기_예약통계_${$("sFrom").value}_${$("sTo").value}.xlsx`);
+}
+
+// ── 문자 문안
+let SET = null;
+function smsBytes(t){ let n = 0; for(const ch of t){ n += ch.charCodeAt(0) > 127 ? 2 : 1; } return n; }
+async function initSms(){
+  const sel = $("smsDate"), cur = sel.value;
+  sel.innerHTML = OV.days.filter(d => d.op_date >= OV.today).map(d => `<option value="${d.op_date}">${dLabel(d.op_date)} (${n0(d.persons)}명)</option>`).join("");
+  if(cur) sel.value = cur;
+  if(!SET){ const r = await rpc("rsv_admin_settings", { p_key:KEY }); if(r.ok) SET = r; }
+  genSms();
+}
+async function genSms(){
+  const date = $("smsDate").value; if(!date || !SET) return;
+  const d = OV.days.find(x => x.op_date === date);
+  const site = location.origin + (location.pathname.replace(/admin(\.html)?$/, "") || "/");
+  const map = { "{날짜}":dLabel(date), "{시작}":d.event_time || "", "{최종입장}":d.last_entry || "", "{종료}":d.end_time || "", "{부대부스}":d.booth_time || "",
+                "{예약페이지}":site, "{문의}":SET.contact || "", "{행사명}":SET.title || "" };
+  const txt = (SET.sms_template || "").replace(/\{(날짜|시작|최종입장|종료|부대부스|예약페이지|문의|행사명)\}/g, k => map[k]);
+  $("smsText").value = txt; const b = smsBytes(txt); $("smsBytes").textContent = `· 약 ${b}바이트 (${b > 90 ? "LMS" : "SMS"})`;
+  const r = await rpc("rsv_admin_export", { p_key:KEY, p_from:date, p_to:date, p_include_cancelled:false });
+  if(!r.ok) return alert(r.msg);
+  const phones = [...new Set(r.items.map(x => x.phone).filter(Boolean))];
+  $("smsPhones").value = phones.join("\n"); $("smsCount").textContent = `· ${n0(phones.length)}건`;
+}
+async function copyText(id, btn, label){ try{ await navigator.clipboard.writeText($(id).value); btn.textContent = "복사했습니다"; setTimeout(() => btn.textContent = label, 1500); }catch(e){ $(id).select(); document.execCommand("copy"); } }
+
+// ── 설정
+async function loadSettings(){
+  const r = await rpc("rsv_admin_settings", { p_key:KEY }); if(!r.ok) return;
+  $("guard").innerHTML = GUARD ? `<span class="chip open">작동 중</span> 같은 접속의 대량 예약·로그인 대입을 막고 있습니다.`
+    : `<span class="chip closed">확인 불가</span> 접속 정보를 받지 못해 같은 접속 제한이 꺼져 있습니다(로그인 잠금은 전체 기준으로 작동).`;
+  $("st_party").value = r.max_party; $("st_age").value = r.min_age; $("st_title").value = r.title; $("st_place").value = r.place; $("st_host").value = r.host; $("st_contact").value = r.contact; $("st_sms").value = r.sms_template || ""; SET = r;
+  const y = new Date(Date.now() + 9*3600e3 - 864e5).toISOString().slice(0,10); if(!$("pTo").value) $("pTo").value = y;
+  const lg = await rpc("rsv_admin_log", { p_key:KEY, p_limit:200 });
+  const A = { checkin:"입장 처리", cancel:"관리자 취소", restore:"복구", day_upsert:"운영일 저장", day_delete:"운영일 삭제", export:"명단 내려받기", purge:"개인정보 파기", settings:"설정 변경", set_key:"키 변경" };
+  $("logTbl").innerHTML = `<thead><tr><th>시각</th><th>권한</th><th>작업</th><th>운영일</th><th>내용</th></tr></thead><tbody>${
+    (lg.items || []).map(x => `<tr><td>${kst(x.at)}</td><td>${x.actor === "admin" ? "관리자" : "현장"}</td><td>${A[x.action] || esc(x.action)}</td><td>${x.op_date || ""}</td>
+      <td class="small">${esc(x.action === "day_upsert" ? "" : x.detail || "")}</td></tr>`).join("")}</tbody>`;
+}
+async function saveSettings(){
+  $("stErr").textContent = ""; $("stOk").textContent = "";
+  const r = await rpc("rsv_admin_settings", { p_key:KEY, p_set:{ max_party:Number($("st_party").value), min_age:Number($("st_age").value), title:$("st_title").value,
+    place:$("st_place").value, host:$("st_host").value, contact:$("st_contact").value, sms_template:$("st_sms").value } });
+  r.ok ? $("stOk").textContent = "저장했습니다." : $("stErr").textContent = r.msg;
+  if(r.ok) SET = null;
+}
+async function changeKey(){
+  $("kErr").textContent = ""; $("kOk").textContent = "";
+  const which = $("kWhich").value, v = $("kNew").value;
+  if(!confirm(`${which === "admin" ? "관리자 키" : "현장 PIN"}를 바꿀까요?`)) return;
+  const r = await rpc("rsv_admin_set_key", { p_key:KEY, p_which:which, p_new:v });
+  if(!r.ok) return $("kErr").textContent = r.msg;
+  $("kNew").value = ""; $("kOk").textContent = "변경했습니다.";
+  if(which === "admin"){ KEY = v; try{ sessionStorage.setItem("rsv_key", v); }catch(e){} }
+}
+async function purge(){
+  $("pErr").textContent = ""; $("pOk").textContent = "";
+  const to = $("pTo").value; if(!to) return;
+  if(!confirm(`${to}까지 운영일 예약자의 이름·휴대폰 번호를 영구 삭제합니다. 계속할까요?`)) return;
+  const r = await rpc("rsv_admin_purge", { p_key:KEY, p_to:to });
+  r.ok ? $("pOk").textContent = `${n0(r.count)}건 파기했습니다.` : $("pErr").textContent = r.msg;
+}
+
+// ── 연결
+$("btnLogin").onclick = () => login($("key").value.trim());
+$("key").addEventListener("keydown", e => { if(e.key === "Enter") login($("key").value.trim()); });
+$("btnOut").onclick = logout;
+document.querySelectorAll("[data-reload]").forEach(b => b.onclick = async () => { await loadOverview(); const k = $("tabs").querySelector('[aria-selected="true"]')?.dataset.k; show(k); });
+$("btnLSearch").onclick = loadList; $("lStatus").onchange = loadList; $("lDate").onchange = loadList;
+$("lQ").addEventListener("keydown", e => { if(e.key === "Enter") loadList(); });
+$("btnXlsDay").onclick = () => exportRange($("lDate").value, $("lDate").value, $("lStatus").value !== "active");
+$("btnXlsRange").onclick = () => exportRange($("xFrom").value, $("xTo").value, $("xCancel").checked);
+$("dQ").addEventListener("input", () => { clearTimeout(deskTimer); deskTimer = setTimeout(deskSearch, 300); });
+$("btnDaySave").onclick = saveDay;
+$("btnDayAuto").onclick = () => { if(!$("df_date").value) return $("dfErr").textContent = "운영일을 먼저 고르세요."; const w = autoWindow($("df_date").value); $("df_open").value = w.open; $("df_close").value = w.close; };
+$("btnBulk").onclick = bulkAdd;
+$("btnStats").onclick = loadStats; $("btnXlsStats").onclick = exportStats;
+$("btnSmsGen").onclick = genSms; $("smsDate").onchange = genSms;
+$("btnSmsCopy").onclick = () => copyText("smsText", $("btnSmsCopy"), "본문 복사"); $("btnSmsPhones").onclick = () => copyText("smsPhones", $("btnSmsPhones"), "번호 복사");
+$("btnSet").onclick = saveSettings; $("btnKey").onclick = changeKey; $("btnPurge").onclick = purge;
+if(KEY) login(KEY);
+</script>
+</body>
+</html>
