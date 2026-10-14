@@ -220,6 +220,10 @@
         <div class="card"><h3>1건당 인원</h3><div class="bars" id="sParty"></div></div>
         <div class="card"><h3>예약 요일 (신청 시점)</h3><div class="bars" id="sWeek"></div></div>
       </div>
+      <div class="card"><h3>거주지 (예약 인원 기준)</h3><div id="sLocal" class="muted" style="margin:0 0 10px"></div>
+        <div class="two" style="margin:0"><div><h4 style="margin:0 0 6px">시·도</h4><div class="bars" id="sRegion"></div></div>
+        <div><h4 style="margin:0 0 6px">시·군·구 (인원 많은 순)</h4><div class="scroll" style="max-height:360px"><table class="tbl" id="sCity"></table></div></div></div>
+        <p class="muted" style="margin:8px 0 0">'미입력'은 거주지 항목을 넣기 전에 들어온 예약입니다.</p></div>
       <div class="card"><h3>예약 신청 시간대 (0~23시)</h3><div class="cols" id="sHour"></div><div class="xl" id="sHourX"></div>
         <p class="muted" style="margin:8px 0 0">막대에 마우스를 올리면 건수가 보입니다. 접수 시작 직후 몰림을 확인해 서버·안내 계획에 활용하세요.</p></div>
     </section>
@@ -368,7 +372,7 @@ async function loadList(){
   $("lSum").textContent = `${dLabel(date)} · 예약 ${act.length}건 ${n0(act.reduce((a,x)=>a+x.party,0))}명 · 입장 ${n0(act.reduce((a,x)=>a+x.checked_in,0))}명 · 표시 ${rows.length}건`;
   $("lTbl").innerHTML = `<thead><tr><th>#</th><th>예약번호</th><th>이름</th><th>휴대폰</th><th class="n">인원</th><th>구성(출생연도·성별)</th><th>신청 시각</th><th>상태</th><th class="n">입장</th><th></th></tr></thead><tbody>${
     rows.map((x,i) => `<tr><td>${i+1}</td><td class="code">${esc(x.code)}</td><td>${x.purged ? '<span class="muted">파기됨</span>' : esc(x.name)}${x.same_src >= 3 ? ` <span class="chip full" title="같은 인터넷 연결에서 들어온 예약 수(매크로 의심 시 확인)">같은 접속 ${x.same_src}건</span>` : ""}</td><td>${esc(x.phone || "")}</td>
-      <td class="n">${x.party}</td><td>${(x.members||[]).map(m => `<span class="mem" title="${m.in ? "입장 " + kst(m.in_at) : "미입장"}">${esc(m.n || "동반자")} ${m.y}·${G[m.g]} <b class="code">${esc(m.code || "")}</b>${m.in ? " ✓" : ""}</span>`).join(" ")}</td>
+      <td class="n">${x.party}</td><td>${(x.members||[]).map(m => `<span class="mem" title="${m.in ? "입장 " + kst(m.in_at) : "미입장"}">${esc(m.n || "동반자")} ${m.y}·${G[m.g]}${m.r ? " · " + esc(m.r + " " + (m.c || "")) : ""} <b class="code">${esc(m.code || "")}</b>${m.in ? " ✓" : ""}</span>`).join(" ")}</td>
       <td>${kst(x.created_at)}</td><td><span class="chip ${x.status}">${x.status === "active" ? "예약" : "취소" + (x.cancelled_by === "admin" ? "(관리자)" : "")}</span></td>
       <td class="n">${x.checked_in}</td>
       <td>${x.status === "active" ? `<button class="b sm danger" data-cx="${x.id}">취소</button>` : `<button class="b sm ghost" data-rs="${x.id}">복구</button>`}</td></tr>`).join("")
@@ -384,10 +388,10 @@ async function adminCancel(id, restore){
 }
 
 // ── 엑셀
-function membersText(ms){ return (ms || []).slice(1).map(m => `${m.n || "동반자"}(${m.y}/${G[m.g]}/${m.code || ""})`).join(", "); }
+function membersText(ms){ return (ms || []).slice(1).map(m => `${m.n || "동반자"}(${m.y}/${G[m.g]}/${m.r ? m.r + " " + (m.c || "") + "/" : ""}${m.code || ""})`).join(", "); }
 function personRows(items){
   return items.flatMap(x => (x.members || []).map(m => ({ "운영일":x.op_date, "이름":m.n || (m.seq === 1 ? x.name : "동반자"), "구분":m.seq === 1 ? "대표자" : "동반자",
-    "출생연도":m.y, "성별":G[m.g], "예약번호":m.code || "", "대표자 휴대폰":x.phone || "", "예약 상태":x.status === "active" ? "예약" : "취소", "입장":m.in ? "입장" : "", "입장 시각":kstS(m.in_at) })));
+    "출생연도":m.y, "성별":G[m.g], "거주 시·도":m.r || "", "거주 시·군·구":m.c || "", "예약번호":m.code || "", "대표자 휴대폰":x.phone || "", "예약 상태":x.status === "active" ? "예약" : "취소", "입장":m.in ? "입장" : "", "입장 시각":kstS(m.in_at) })));
 }
 function rowsForXls(items){
   return items.map(x => ({ "운영일":x.op_date, "예약번호":x.code, "이름":x.name || "(파기됨)", "휴대폰":x.phone || "", "인원":x.party,
@@ -426,7 +430,7 @@ async function deskSearch(){
   $("dList").innerHTML = items.map(x => `<div class="card" style="margin-bottom:10px">
       <div class="small" style="margin-bottom:6px"><b>${esc(x.name || "")}</b> 외 ${x.party - 1}명 · ${esc(x.phone || "")} · 입장 <output id="o${x.id}">${x.checked_in}</output>/${x.party}</div>
       ${(x.members||[]).map(m => `<div class="fc" style="padding:6px 0;border-top:1px solid var(--line)">
-        <div><span class="code c">${esc(m.code || "")}</span> · <b>${esc(m.n || "동반자")}</b> <span class="muted">${m.seq === 1 ? "대표자" : "동반자"} · ${m.y}·${G[m.g]}</span></div>
+        <div><span class="code c">${esc(m.code || "")}</span> · <b>${esc(m.n || "동반자")}</b> <span class="muted">${m.seq === 1 ? "대표자" : "동반자"} · ${m.y}·${G[m.g]}${m.r ? " · " + esc(m.r + " " + (m.c || "")) : ""}</span></div>
         <button class="b sm ${m.in ? "" : "ghost"}" data-tg="${x.id}|${m.seq}|${m.in ? 0 : 1}">${m.in ? "입장 완료 ✓ (취소)" : "입장 처리"}</button></div>`).join("")}
       <div style="text-align:right;margin-top:8px"><button class="b sm ghost" data-all="${x.id}">전원 입장(${x.party}명)</button></div></div>`).join("")
     || `<p class="muted">오늘 예약 중 일치하는 항목이 없습니다.</p>`;
@@ -520,10 +524,24 @@ async function loadStats(){
   barList($("sGender"), r.gender, k => G[k]);
   barList($("sAge"), r.age, ageLabel);
   barList($("sParty"), r.party, k => `${k}명`);
+  const reg = r.region || [], cities = r.city || [], rt = reg.reduce((a,x) => a + x.n, 0);
+  const local = cities.filter(c => c.local).reduce((a,c) => a + c.n, 0), gn = (reg.find(x => x.k === "경남") || { n:0 }).n;
+  const none = (reg.find(x => x.k === "미입력") || { n:0 }).n, known = rt - none;
+  $("sLocal").innerHTML = known ? `밀양 시민 <b>${n0(local)}명</b>(${pct(local, known)}%) · 경남(밀양 외) <b>${n0(gn - local)}명</b>(${pct(gn - local, known)}%) · 다른 시·도 <b>${n0(known - gn)}명</b>(${pct(known - gn, known)}%)${none ? ` · 미입력 ${n0(none)}명` : ""}` : "";
+  barList($("sRegion"), reg, k => k);
+  $("sCity").innerHTML = cities.length ? `<thead><tr><th class="n">순위</th><th>시·도</th><th>시·군·구</th><th class="n">인원</th><th class="n">비율</th></tr></thead><tbody>${
+    cities.map((c,i) => `<tr><td class="n">${i+1}</td><td>${esc(c.s)}</td><td>${c.local ? "<b>" + esc(c.k) + "</b>" : esc(c.k)}</td><td class="n">${n0(c.n)}</td><td class="n">${pct(c.n, known)}%</td></tr>`).join("")}</tbody>`
+    : `<tbody><tr><td class="muted">자료가 없습니다.</td></tr></tbody>`;
   barList($("sWeek"), r.weekday.map(x => ({ k:x.k % 7, n:x.n })).sort((a,b) => ((a.k+6)%7) - ((b.k+6)%7)), k => `${WD[k]}요일`);
   const hours = Array.from({ length:24 }, (_, h) => (r.hour.find(x => x.k === h) || { n:0 }).n), hm = Math.max(1, ...hours);
   $("sHour").innerHTML = hours.map((v,h) => `<i style="height:${v / hm * 100}%" title="${h}시: ${n0(v)}건"></i>`).join("");
   $("sHourX").innerHTML = hours.map((_,h) => `<span>${h % 3 === 0 ? h : ""}</span>`).join("");
+}
+// 거주지 시트: 합계 + 운영일별 인원 열
+function regionRows(items, head){
+  const days = STATS.daily.map(d => d.op_date), tot = items.reduce((a,x) => a + x.n, 0);
+  return items.map(x => Object.assign(head(x), { "인원":x.n, "비율(%)":pct(x.n, tot) },
+    Object.fromEntries(days.map(d => [d, (x.by_day || {})[d] || 0]))));
 }
 function exportStats(){
   if(!STATS) return;
@@ -532,6 +550,8 @@ function exportStats(){
        "취소 건수":d.cancelled, "취소 인원":d.cancelled_persons, "입장 인원":d.checked_in, "첫 예약":kstS(d.first_at), "정원 마감 시각":kstS(d.full_at) }))],
     ["성별", STATS.gender.map(x => ({ "성별":G[x.k], "인원":x.n }))],
     ["연령대", STATS.age.map(x => ({ "연령대":ageLabel(x.k), "인원":x.n }))],
+    ["거주지_시도", regionRows(STATS.region || [], x => ({ "시·도":x.k }))],
+    ["거주지_시군구", regionRows(STATS.city || [], x => ({ "시·도":x.s, "시·군·구":x.k }))],
     ["1건당 인원", STATS.party.map(x => ({ "인원":`${x.k}명`, "건수":x.n }))],
     ["신청 시간대", STATS.hour.map(x => ({ "시":x.k, "건수":x.n }))],
     ["신청 요일", STATS.weekday.map(x => ({ "요일":`${WD[x.k % 7]}요일`, "건수":x.n }))]
