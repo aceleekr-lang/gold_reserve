@@ -283,10 +283,9 @@ function renderDays(){
   const box = $("days");
   if(!INFO.days.length){ box.innerHTML = `<div class="card muted">예정된 운영일이 없습니다.</div>`; return; }
   box.innerHTML = INFO.days.map(d => {
-    const pct = d.capacity ? Math.min(100, Math.round(d.reserved / d.capacity * 100)) : 100;
     const chip = { open:"접수중", full:"마감(정원)", upcoming:"접수 예정", closed:"접수 마감" }[d.status] || d.status;
     let foot;
-    if(d.status === "open") foot = `<span class="remain">잔여 <b>${d.remaining.toLocaleString()}</b> / ${d.capacity.toLocaleString()}명</span>
+    if(d.status === "open") foot = `<span class="remain">선착순 접수 중</span>
         <button class="btn" type="button" data-pick="${d.op_date}">이 날 예약</button>`;
     else if(d.status === "upcoming") foot = `<span>${tLabel(d.open_at)} 접수 시작</span>`;
     else if(d.status === "full") foot = `<span>정원이 찼습니다. 취소가 나오면 다시 열립니다.</span>`;
@@ -294,7 +293,6 @@ function renderDays(){
     return `<div class="day ${SEL===d.op_date?'sel':''}">
       <div class="day-top"><div class="date">${dLabel(d.op_date)}${d.note?`<small>${esc(d.note)}</small>`:""}</div><span class="chip ${d.status}">${chip}</span></div>
       <div class="times">${esc(timesText(d))}</div>
-      ${d.status==="upcoming" ? "" : `<div class="bar" aria-label="예약 ${pct}%"><i style="width:${pct}%"></i></div>`}
       <div class="day-foot">${foot}</div></div>`;
   }).join("");
   box.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => pick(b.dataset.pick)));
