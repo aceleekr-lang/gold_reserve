@@ -136,6 +136,7 @@
   <!-- 1. 날짜 선택 -->
   <section id="secDays">
     <h2 class="sec-title">① 날짜 선택</h2>
+    <div class="err hidden" id="lateNote" style="background:#fff8e6;border:1px solid #e8cf8f;color:#5a4410;border-radius:10px;padding:10px 12px;margin:0 0 12px"></div>
     <div class="days" id="days"><div class="loading">운영일을 불러오는 중…</div></div>
   </section>
 
@@ -242,6 +243,18 @@ function timesText(d){
 }
 
 let INFO = null, SEL = null;
+// 추가 접수 링크(?k=코드): 링크를 받은 사람만 공개 마감 후에도 해당 운영일 예약 가능
+let LATE = null; const LATE_K = (new URLSearchParams(location.search).get("k") || "").trim();
+async function checkLate(){
+  if(!LATE_K) return;
+  try{ const r = await rpc("rsv_late_check", { p_late:LATE_K }); LATE = r.ok ? { k:LATE_K, date:r.op_date, until:r.until } : { expired:true }; }
+  catch(e){ LATE = null; }
+  const box = $("lateNote"); if(!box) return;
+  box.classList.remove("hidden");
+  box.innerHTML = LATE && LATE.date ? `<b>추가 접수 링크</b>로 들어오셨습니다. ${dLabel(LATE.date)} 금찾기 예약을 <b>${tLabel(LATE.until)}</b>까지 받습니다. (정원이 차면 마감)`
+    : `추가 접수 링크가 만료되었거나 올바르지 않습니다.`;
+}
+const lateOpen = d => LATE && LATE.date === d.op_date && Date.now() < new Date(LATE.until).getTime() && d.status === "closed";
 
 async function load(){
   try{
@@ -282,10 +295,11 @@ async function load(){
 function renderDays(){
   const box = $("days");
   if(!INFO.days.length){ box.innerHTML = `<div class="card muted">예정된 운영일이 없습니다.</div>`; return; }
+  INFO.days.forEach(d => { if(lateOpen(d)){ d.status = "open"; d.late = true; } });
   box.innerHTML = INFO.days.map(d => {
-    const chip = { open:"접수중", full:"마감(정원)", upcoming:"접수 예정", closed:"접수 마감" }[d.status] || d.status;
+    const chip = d.late ? "추가 접수" : { open:"접수중", full:"마감(정원)", upcoming:"접수 예정", closed:"접수 마감" }[d.status] || d.status;
     let foot;
-    if(d.status === "open") foot = `<span class="remain">선착순 접수 중</span>
+    if(d.status === "open") foot = `<span class="remain">${d.late ? `추가 접수 · 당일 ${tLabel(LATE.until).slice(-5)}까지` : "선착순 접수 중"}</span>
         <button class="btn" type="button" data-pick="${d.op_date}">이 날 예약</button>`;
     else if(d.status === "upcoming") foot = `<span>${tLabel(d.open_at)} 접수 시작</span>`;
     else if(d.status === "full") foot = `<span>정원이 찼습니다. 취소가 나오면 다시 열립니다.</span>`;
@@ -363,6 +377,7 @@ async function book(){
   const body = { p_date:SEL, p_name:$("name").value.trim(), p_phone:$("phone").value, p_birth:Number($("birth").value) || null,
                  p_gender:segVal(document.querySelector('.seg[data-g="rep"]')), p_members:members, p_agree:$("agree").checked,
                  p_region:sido($("rs").value), p_city:$("rc").value };
+  if(LATE && LATE.k) body.p_late = LATE.k;
   if(!body.p_name) return err.textContent = "대표자 이름을 입력해 주세요.";
   if(body.p_phone.replace(/\D/g,"").length < 10) return err.textContent = "휴대폰 번호를 입력해 주세요.";
   if(!/^\d{4}$/.test($("birth").value.trim())) return err.textContent = "출생연도 4자리를 입력해 주세요.";
@@ -380,7 +395,7 @@ async function book(){
     $("dCodes").innerHTML = (r.members || []).map(m => `<div class="p"><span class="who">${esc(m.name)}<small>${m.seq === 1 ? "대표자" : "동반자"}</small></span><span class="c">${esc(m.code)}</span></div>`).join("");
     LAST_CODES = (r.members || []).map(m => `${m.name} ${m.code}`).join("\n");
     $("dBox").innerHTML = `<b>${dLabel(r.op_date)}</b> · ${r.party}명<br>${esc(timesText(r))}<br>
-      <span class="muted">취소는 ${tLabel(r.close_at)}까지 아래 '예약 조회'에서 할 수 있습니다.</span>`;
+      <span class="muted">${new Date(r.close_at) > new Date() ? `취소는 ${tLabel(r.close_at)}까지 아래 '예약 조회'에서 할 수 있습니다.` : `취소는 문의 전화로 연락해 주세요.`}</span>`;
     $("dSteps").innerHTML = stepsHtml();
     $("secForm").classList.add("hidden"); $("secDone").classList.remove("hidden");
     ["name","phone","birth"].forEach(id => $(id).value = ""); setRegion($("rs"), $("rc"), ""); $("agree").checked = false; $("party").value = "1"; renderMembers();
@@ -440,7 +455,7 @@ $("btnLookup").addEventListener("click", lookup);
 ["birth"].forEach(id => $(id).addEventListener("input", ev => ev.target.value = ev.target.value.replace(/\D/g,"").slice(0,4)));
 document.addEventListener("input", ev => { if(ev.target.id && ev.target.id.startsWith("my")) ev.target.value = ev.target.value.replace(/\D/g,"").slice(0,4); });
 segBind(document);
-load().then(scheduleOpen);
+checkLate().then(load).then(scheduleOpen);
 setInterval(() => { if(document.hidden) return; INFO ? refreshDays() : load().then(scheduleOpen); }, 30000);  // 첫 로딩 실패 시 재시도
 </script>
 </body>
