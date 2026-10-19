@@ -99,11 +99,13 @@
   .codes .p{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f7f8fb;border:1px solid var(--line);border-radius:12px;padding:10px 14px}
   .codes .p .who{font-weight:700}
   .codes .p .who small{display:block;color:var(--muted);font-weight:500;font-size:12.5px}
-  .codes .p .c{font-weight:900;letter-spacing:.14em;font-size:24px;color:var(--night);font-variant-numeric:tabular-nums}
+  .codes .p .c{font-weight:800;letter-spacing:.06em;font-size:18px;color:var(--night);font-variant-numeric:tabular-nums}
   .steps{text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px 32px;margin:12px 0;font-size:14.5px;color:var(--ink2)}
   .steps li{margin:4px 0}
   .steps b{color:var(--ink)}
   .mem .pname{margin-top:8px}
+  .howto{margin:10px 0 6px;padding:14px 12px;border-radius:14px;background:#fff8e6;border:1px solid #efd9a4;font-size:15px;color:var(--muted);line-height:1.5}
+  .howto b{display:block;margin-top:4px;font-size:19px;color:var(--night);line-height:1.45}
   .code{font-size:46px;font-weight:900;letter-spacing:.18em;color:var(--night);margin:6px 0;font-variant-numeric:tabular-nums}
   .done .box{background:var(--gold-soft);border-radius:12px;padding:14px;margin:14px 0;text-align:left;font-size:15px}
   .muted{color:var(--muted);font-size:13.5px}
@@ -149,7 +151,7 @@
 
       <label class="f" for="name">대표자 이름</label>
       <input type="text" id="name" autocomplete="name" maxlength="20" placeholder="홍길동">
-      <label class="f" for="phone">휴대폰 번호 <span>(안내 문자 수신용)</span></label>
+      <label class="f" for="phone">대표자 본인 휴대폰번호 <span>(금찾기 시작 열쇠 · 안내 문자)</span></label>
       <input type="tel" id="phone" inputmode="tel" autocomplete="tel" maxlength="17" placeholder="010-0000-0000">
       <div class="row">
         <div><label class="f" for="birth">출생연도</label>
@@ -166,6 +168,7 @@
 
       <div class="consent" id="consent"></div>
       <label class="check"><input type="checkbox" id="agree"> <span>개인정보 수집·이용에 동의합니다. (필수)</span></label>
+      <label class="check hidden" id="agree2Row"><input type="checkbox" id="agree2"> <span>동반자에게 수집·이용 내용을 알리고 동의를 받았습니다. (필수)</span></label>
       <div class="err" id="err" role="alert"></div>
       <button class="btn gold block" type="button" id="btnBook">예약 신청</button>
     </div>
@@ -175,13 +178,11 @@
   <section id="secDone" class="hidden">
     <div class="card done">
       <div class="muted">예약이 완료되었습니다</div>
-      <div class="muted" style="margin-top:6px">예약번호 (한 사람에 하나씩)</div>
-      <div class="code hidden" id="dCode"></div>
+      <div class="howto">금찾기 시작 방법<br><b>시작 표식에 휴대폰을 대고<br>본인 휴대폰번호를 넣으세요</b></div>
       <div class="codes" id="dCodes"></div>
-      <button class="btn ghost block" type="button" id="btnCopy" style="margin-top:6px">예약번호 전체 복사</button>
       <div class="box" id="dBox"></div>
       <ol class="steps" id="dSteps"></ol>
-      <p class="muted">이 화면을 <b>캡처</b>해 두세요. 예약번호는 아래 '예약 조회'에서 이름과 휴대폰 번호로 언제든 다시 확인할 수 있습니다. 동반자에게는 본인 번호를 알려 주세요.</p>
+      <p class="muted">따로 외울 번호는 없습니다. 사람마다 <b>예약할 때 적은 본인 휴대폰번호</b>가 열쇠예요. 예약 내용은 아래 '예약 조회'에서 이름과 휴대폰번호로 다시 확인할 수 있습니다.</p>
       <button class="btn ghost block" type="button" id="btnAgain">처음으로</button>
     </div>
   </section>
@@ -275,16 +276,17 @@ async function load(){
     `운영일별 <b>선착순 ${cap.toLocaleString()}명</b>, 1건에 <b>최대 ${INFO.max_party}명</b>까지 (대표자는 ${INFO.min_age}세 이상, 출생연도 기준)`,
     `같은 휴대폰 번호로 하루 1건 예약할 수 있으며, 토·일 각각 예약할 수 있습니다.`,
     `취소는 접수 마감(금 17:00) 전까지 가능하며, 취소된 자리는 바로 다시 열립니다.`,
-    `예약하면 <b>한 사람에 예약번호 6자리가 하나씩</b> 나옵니다. 현장에서 각자 본인 번호를 입력해 시작합니다(1인 1일 1회).`,
-    `금찾기는 <b>휴대폰 1대로 1회만</b> 참여할 수 있습니다. 동반자도 <b>각자 자기 휴대폰</b>이 있어야 하며, <b>본인 휴대폰이 없는 분은 예약을 하셔도 현장 참여가 제한</b>됩니다.`,
+    `대표자·동반자 <b>모두 본인 휴대폰번호</b>를 적습니다. 현장에서 시작 표식에 휴대폰을 대고 <b>본인 휴대폰번호</b>를 넣으면 시작됩니다(1인 1일 1회). 같은 날 같은 번호는 한 사람만 예약할 수 있습니다.`,
+    `금찾기는 <b>휴대폰 1대로 1회만</b> 참여할 수 있습니다. 동반자도 <b>각자 자기 휴대폰</b>이 있어야 하며, <b>본인 휴대폰이 없는 분(어린이 등)은 예약·참여할 수 없습니다</b>.`,
     `이 예약은 <b>금찾기 참여 예약</b>이며, 별빛정원 입장권이 아닙니다. 현장에서 <b>별빛정원 입장권(유료)</b>을 구매해 일반 관람객과 같은 입구로 들어간 뒤, 정원 안에서 <b>사전예약자만</b> 금찾기에 참여할 수 있습니다. 예약자 전용 입구는 따로 없습니다.`
   ].map(t=>`<li>${t}</li>`).join("");
   renderDays();
-  $("consent").innerHTML = `<dl>
-    <dt>수집 항목</dt><dd>대표자 이름·휴대폰 번호·출생연도·성별·거주지(시·군·구), 동반자 이름·출생연도·성별·거주지(시·군·구)</dd>
-    <dt>이용 목적</dt><dd>사전예약 확인, 행사 안내 문자 발송, 참여 통계 작성</dd>
-    <dt>보유 기간</dt><dd>행사 종료 후 이름·휴대폰 번호 파기 (출생연도·성별·거주지는 개인을 알아볼 수 없는 통계로만 보관)</dd>
-    <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 거부하면 예약할 수 없습니다.</dd>
+  $("consent").innerHTML = `<b>개인정보 수집·이용 동의 (필수)</b><dl>
+    <dt>수집 항목</dt><dd>이름, 휴대폰번호, 성별, 출생연도, 거주지역(시·군) — 대표자 및 동반자</dd>
+    <dt>이용 목적</dt><dd>사전예약 확인, 「영남루에 흩어진 별을 찾아라」 참여 시작·이어하기 확인, 현장 지원(참여 초기화), 운영 안내 문자 발송, 참여 통계 작성(성별·연령대·지역별 집계, 개인 식별 불가 형태)</dd>
+    <dt>보관 기간</dt><dd><b>행사 종료일(2026. 11. 8.)로부터 60일(2027. 1. 7.)까지</b> 보관 후 지체 없이 파기. 1등 당첨자 서류는 관련 법령(소득세법)에 따라 별도 보관</dd>
+    <dt>처리 주체</dt><dd>밀양시(주최) / 운영 수탁: 플로우미디어 / 저장 위치: 예약 시스템 및 참여 시스템 데이터베이스(국내)</dd>
+    <dt>거부 권리</dt><dd>동의를 거부할 수 있으며, 거부 시 예약 및 참여가 불가합니다.</dd>
     <dt>접속 기록</dt><dd>매크로 등 부정 예약 방지를 위해 접속 IP를 알아볼 수 없게 변환한 값만 이틀간 보관 후 자동 삭제합니다.</dd></dl>`;
   if(!$("rs").options.length) bindRegion($("rs"), $("rc"), syncMemberRegions);
   const ps = $("party"); ps.innerHTML = "";
@@ -354,25 +356,26 @@ function syncMemberRegions(){
 
 function renderMembers(){
   const n = Number($("party").value || 1) - 1, box = $("members");
-  const keep = [...box.querySelectorAll(".mem")].map((m, i) => ({ n:(m.querySelector(`#mn${i}`) || {}).value, y:m.querySelector(`#my${i}`).value, g:segVal(m.querySelector(".seg")),
+  const keep = [...box.querySelectorAll(".mem")].map((m, i) => ({ n:(m.querySelector(`#mn${i}`) || {}).value, p:(m.querySelector(`#mp${i}`) || {}).value, y:m.querySelector(`#my${i}`).value, g:segVal(m.querySelector(".seg")),
                                                                  s:$(`ms${i}`).value, c:$(`mc${i}`).value, own:m.dataset.own }));
   box.innerHTML = Array.from({ length:n }, (_, i) => `<div class="mem"><h4>동반자 ${i+1}</h4>
-      <div class="pname"><label class="f" for="mn${i}">이름 <span>(본인 예약번호가 발급됩니다)</span></label><input type="text" id="mn${i}" maxlength="20" autocomplete="off" placeholder="동반자 이름"></div>
+      <div class="pname"><label class="f" for="mn${i}">이름</label><input type="text" id="mn${i}" maxlength="20" autocomplete="off" placeholder="동반자 이름"></div>
+      <label class="f" for="mp${i}">동반자 본인 휴대폰번호 <span>(현장에서 이 번호로 시작)</span></label><input type="tel" id="mp${i}" inputmode="tel" maxlength="17" autocomplete="off" placeholder="010-0000-0000">
       <div class="row"><div><label class="f" for="my${i}">출생연도</label><input type="text" id="my${i}" inputmode="numeric" maxlength="4" placeholder="예) 2016"></div>
       <div><label class="f">성별</label><div class="seg"><button type="button" data-v="M" aria-pressed="false">남</button><button type="button" data-v="F" aria-pressed="false">여</button></div></div></div>
       <label class="f" for="ms${i}">거주지 <span>(대표자와 다르면 바꿔 주세요)</span></label>
       <div class="row"><div><select id="ms${i}" aria-label="동반자 ${i+1} 시·도"></select></div><div><select id="mc${i}" aria-label="동반자 ${i+1} 시·군·구"></select></div></div></div>`).join("");
-  segBind(box);
+  segBind(box); $("agree2Row").classList.toggle("hidden", n < 1); if(n < 1) $("agree2").checked = false;
   box.querySelectorAll(".mem").forEach((m, i) => bindRegion($(`ms${i}`), $(`mc${i}`), () => { m.dataset.own = "1"; }));
   syncMemberRegions();
-  box.querySelectorAll(".mem").forEach((m, i) => { if(keep[i]){ m.querySelector(`#my${i}`).value = keep[i].y; m.querySelector(`#mn${i}`).value = keep[i].n || "";
+  box.querySelectorAll(".mem").forEach((m, i) => { if(keep[i]){ m.querySelector(`#my${i}`).value = keep[i].y; m.querySelector(`#mn${i}`).value = keep[i].n || ""; m.querySelector(`#mp${i}`).value = keep[i].p || "";
     if(keep[i].g) m.querySelector(`[data-v="${keep[i].g}"]`).setAttribute("aria-pressed","true");
     if(keep[i].own === "1"){ m.dataset.own = "1"; setRegion($(`ms${i}`), $(`mc${i}`), keep[i].s, keep[i].c); } } });
 }
 
 async function book(){
   const err = $("err"); err.textContent = "";
-  const members = [...document.querySelectorAll("#members .mem")].map((m, i) => ({ n:m.querySelector(`#mn${i}`).value.trim(), y:m.querySelector(`#my${i}`).value.trim(), g:segVal(m.querySelector(".seg")),
+  const members = [...document.querySelectorAll("#members .mem")].map((m, i) => ({ n:m.querySelector(`#mn${i}`).value.trim(), p:m.querySelector(`#mp${i}`).value, y:m.querySelector(`#my${i}`).value.trim(), g:segVal(m.querySelector(".seg")),
                                                                                      r:sido($(`ms${i}`).value), c:$(`mc${i}`).value }));
   const body = { p_date:SEL, p_name:$("name").value.trim(), p_phone:$("phone").value, p_birth:Number($("birth").value) || null,
                  p_gender:segVal(document.querySelector('.seg[data-g="rep"]')), p_members:members, p_agree:$("agree").checked,
@@ -383,22 +386,27 @@ async function book(){
   if(!/^\d{4}$/.test($("birth").value.trim())) return err.textContent = "출생연도 4자리를 입력해 주세요.";
   if(!body.p_gender) return err.textContent = "대표자 성별을 선택해 주세요.";
   if(!body.p_region || !body.p_city) return err.textContent = "대표자 거주지(시·도, 시·군·구)를 선택해 주세요.";
-  if(members.some(m => m.n.length < 2)) return err.textContent = "동반자 이름을 입력해 주세요. (사람마다 예약번호가 발급됩니다)";
+  if(members.some(m => m.n.length < 2)) return err.textContent = "동반자 이름을 입력해 주세요.";
   if(members.some(m => !/^\d{4}$/.test(m.y) || !m.g)) return err.textContent = "동반자의 출생연도와 성별을 모두 입력해 주세요.";
   if(members.some(m => !m.r || !m.c)) return err.textContent = "동반자 거주지(시·도, 시·군·구)를 선택해 주세요.";
+  const ph = x => String(x || "").replace(/\D/g, "").replace(/^82(?=1)/, "0");
+  if(!/^01\d{8,9}$/.test(ph(body.p_phone))) return err.textContent = "대표자 휴대폰번호를 정확히 입력해 주세요. (010으로 시작)";
+  const badM = members.find(m => !/^01\d{8,9}$/.test(ph(m.p)));
+  if(badM) return err.textContent = `${badM.n || "동반자"}님의 본인 휴대폰번호를 입력해 주세요. 본인 휴대폰이 없으면 참여할 수 없습니다.`;
+  const all = [ph(body.p_phone), ...members.map(m => ph(m.p))];
+  if(new Set(all).size !== all.length) return err.textContent = "같은 휴대폰번호가 두 번 들어 있어요. 사람마다 본인 휴대폰번호를 넣어 주세요.";
   if(!body.p_agree) return err.textContent = "개인정보 수집·이용에 동의해 주세요.";
+  if(members.length && !$("agree2").checked) return err.textContent = "동반자에게 알리고 동의를 받았는지 확인란에 체크해 주세요.";
   const btn = $("btnBook"); btn.disabled = true; btn.textContent = "신청 중…";
   try{
     const r = await rpc("rsv_book", body);
     if(!r.ok){ err.textContent = r.msg || "예약할 수 없습니다."; await refreshDays(); return; }
-    $("dCode").textContent = r.code;
-    $("dCodes").innerHTML = (r.members || []).map(m => `<div class="p"><span class="who">${esc(m.name)}<small>${m.seq === 1 ? "대표자" : "동반자"}</small></span><span class="c">${esc(m.code)}</span></div>`).join("");
-    LAST_CODES = (r.members || []).map(m => `${m.name} ${m.code}`).join("\n");
+    $("dCodes").innerHTML = (r.members || []).map(m => `<div class="p"><span class="who">${esc(m.name)}<small>${m.seq === 1 ? "대표자" : "동반자"}</small></span><span class="c">${m.ph4 ? "****-" + esc(m.ph4) : ""}</span></div>`).join("");
     $("dBox").innerHTML = `<b>${dLabel(r.op_date)}</b> · ${r.party}명<br>${esc(timesText(r))}<br>
       <span class="muted">${new Date(r.close_at) > new Date() ? `취소는 ${tLabel(r.close_at)}까지 아래 '예약 조회'에서 할 수 있습니다.` : `취소는 문의 전화로 연락해 주세요.`}</span>`;
     $("dSteps").innerHTML = stepsHtml();
     $("secForm").classList.add("hidden"); $("secDone").classList.remove("hidden");
-    ["name","phone","birth"].forEach(id => $(id).value = ""); setRegion($("rs"), $("rc"), ""); $("agree").checked = false; $("party").value = "1"; renderMembers();
+    ["name","phone","birth"].forEach(id => $(id).value = ""); setRegion($("rs"), $("rc"), ""); $("agree").checked = false; $("agree2").checked = false; $("party").value = "1"; renderMembers();
     document.querySelectorAll('.seg[data-g="rep"] button').forEach(b => b.setAttribute("aria-pressed","false"));
     SEL = null; await refreshDays();
     $("secDone").scrollIntoView({ behavior:"smooth", block:"start" });
@@ -425,15 +433,15 @@ async function lookup(){
     if(!r.items.length){ $("lResult").innerHTML = `<p class="muted" style="margin-top:12px">예약 내역이 없습니다. 이름과 번호를 확인해 주세요.</p>`; return; }
     $("lResult").innerHTML = r.items.map(x => `<div class="item">
       <div class="top"><b>${dLabel(x.op_date)} · ${x.party}명</b><span class="chip ${x.status==='active'?'open':'closed'}">${x.status==='active'?'예약 완료':'취소됨'}</span></div>
-      <div class="codes">${(x.members || []).map(m => `<div class="p"><span class="who">${esc(m.name || "동반자")}<small>${m.seq === 1 ? "대표자" : "동반자"}${m.in ? " · 입장 완료" : ""}</small></span><span class="c">${esc(m.code)}</span></div>`).join("")}</div>
+      <div class="codes">${(x.members || []).map(m => `<div class="p"><span class="who">${esc(m.name || "동반자")}<small>${m.seq === 1 ? "대표자" : "동반자"}${m.in ? " · 입장 완료" : ""}</small></span><span class="c">${m.ph4 ? "****-" + esc(m.ph4) : ""}</span></div>`).join("")}</div>
       <div class="times">${esc(timesText(x))}</div>
-      ${x.status === 'active' ? `<ol class="steps">${stepsHtml()}</ol>` : ""}
+      ${x.status === 'active' ? `<div class="howto">금찾기 시작 방법<b>시작 표식에 휴대폰을 대고 본인 휴대폰번호를 넣으세요</b></div><ol class="steps">${stepsHtml()}</ol>` : ""}
       ${x.cancelable ? `<button class="btn danger" type="button" data-cancel="${x.op_date}|${esc(x.code)}">예약 취소</button>
-         <span class="muted">${tLabel(x.close_at)}까지 취소할 수 있습니다.</span>` : (x.status==='active' ? `<span class="muted">취소 가능 기간이 지났습니다.</span>` : "")}
+         <span class="muted">${tLabel(x.close_at)}까지 취소할 수 있습니다.</span>` : (x.status==='active' ? `<span class="muted">${new Date(x.close_at) > new Date() ? "취소는 대표자 휴대폰번호로 조회해서 할 수 있습니다." : "취소 가능 기간이 지났습니다."}</span>` : "")}
     </div>`).join("");
     $("lResult").querySelectorAll("[data-cancel]").forEach(b => b.onclick = async () => {
       const [date, code] = b.dataset.cancel.split("|");
-      if(!confirm(`${dLabel(date)} 예약(${code})을 취소할까요?\n취소된 자리는 바로 다른 분께 열립니다.`)) return;
+      if(!confirm(`${dLabel(date)} 예약을 취소할까요? (일행 모두 취소)\n취소된 자리는 바로 다른 분께 열립니다.`)) return;
       b.disabled = true;
       try{ const c = await rpc("rsv_cancel", { p_date:date, p_code:code, p_name:name, p_phone:phone });
         if(!c.ok){ e.textContent = c.msg; b.disabled = false; return; }
@@ -444,14 +452,14 @@ async function lookup(){
 }
 
 let LAST_CODES = "";
-function stepsHtml(){ return `<li>매표소에서 <b>별빛정원 입장권(유료)</b>을 구매해 일반 관람객과 같은 입구로 들어갑니다. 예약자 전용 입구는 없습니다</li><li>정원 안 <b>금찾기 시작 표식</b>에 휴대폰을 댑니다 (NFC 켜기, 아이폰은 저전력 모드 해제)</li><li>화면에 <b>본인 예약번호</b>를 입력하면 시작됩니다. 사전예약자만 참여할 수 있고, 동반자도 <b>각자 본인 휴대폰</b>으로 본인 번호를 입력해 시작합니다 (휴대폰 1대 1회, 본인 휴대폰이 없으면 참여 제한)</li>`; }
-$("btnCopy").addEventListener("click", async () => { try{ await navigator.clipboard.writeText(LAST_CODES); $("btnCopy").textContent = "복사했습니다"; setTimeout(() => $("btnCopy").textContent = "예약번호 전체 복사", 1500); }catch(e){ alert(LAST_CODES); } });
+function stepsHtml(){ return `<li>매표소에서 <b>별빛정원 입장권(유료)</b>을 구매해 일반 관람객과 같은 입구로 들어갑니다. 예약자 전용 입구는 없습니다</li><li>정원 안 <b>금찾기 시작 표식</b>에 휴대폰을 댑니다 (휴대폰 NFC 켜기)</li><li>화면에 <b>예약할 때 적은 본인 휴대폰번호</b>를 넣으면 시작됩니다. 사전예약자만 참여할 수 있고, 동반자도 <b>각자 자기 휴대폰</b>으로 <b>자기 휴대폰번호</b>를 넣어 시작합니다 (1인 1일 1회)</li>`; }
 $("party").addEventListener("change", renderMembers);
 $("btnBook").addEventListener("click", book);
 $("btnChange").addEventListener("click", () => { $("secDays").scrollIntoView({ behavior:"smooth" }); });
 $("btnAgain").addEventListener("click", () => { $("secDone").classList.add("hidden"); window.scrollTo({ top:0, behavior:"smooth" }); });
 $("btnLookup").addEventListener("click", lookup);
 ["phone","lPhone"].forEach(id => $(id).addEventListener("input", ev => ev.target.value = fmtPhone(ev.target.value)));
+$("members").addEventListener("input", ev => { if(/^mp\d$/.test(ev.target.id)) ev.target.value = fmtPhone(ev.target.value); });
 ["birth"].forEach(id => $(id).addEventListener("input", ev => ev.target.value = ev.target.value.replace(/\D/g,"").slice(0,4)));
 document.addEventListener("input", ev => { if(ev.target.id && ev.target.id.startsWith("my")) ev.target.value = ev.target.value.replace(/\D/g,"").slice(0,4); });
 segBind(document);

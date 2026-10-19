@@ -111,7 +111,7 @@
       <div class="toolbar">
         <label>운영일<select id="lDate"></select></label>
         <label>상태<select id="lStatus"><option value="active">예약 완료</option><option value="cancelled">취소</option><option value="all">전체</option></select></label>
-        <label>검색 (예약번호·이름·번호 뒷4자리)<input id="lQ" placeholder="검색어"></label>
+        <label>검색 (이름·휴대폰번호·뒷4자리)<input id="lQ" placeholder="검색어"></label>
         <button class="b" id="btnLSearch">조회</button>
         <span style="flex:1"></span>
         <button class="b gold" id="btnXlsDay">이 날 명단 엑셀</button>
@@ -140,7 +140,7 @@
         <div class="card">
           <h3>문자 본문 <span class="muted" id="smsBytes"></span></h3>
           <textarea id="smsText" rows="11" style="width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:8px"></textarea>
-          <div class="toolbar" style="margin:8px 0 0"><button class="b gold" id="btnSmsCopy">본문 복사</button><span class="small muted">예약번호는 사람마다 달라 문자에 넣지 않습니다. 예약자는 예약 페이지 '예약 조회'에서 본인 번호를 봅니다.</span></div>
+          <div class="toolbar" style="margin:8px 0 0"><button class="b gold" id="btnSmsCopy">본문 복사</button><span class="small muted">금찾기 시작 열쇠는 사람마다 <b>본인 휴대폰번호</b>입니다(예약번호 없음).</span></div>
         </div>
         <div class="card">
           <h3>수신 번호 <span class="muted" id="smsCount"></span></h3>
@@ -156,8 +156,8 @@
       <div class="toolbar"><h2 style="margin:0;flex:1">현장 확인 · <span id="dDate"></span></h2><button class="b ghost sm" data-reload>새로고침</button></div>
       <div class="kpis" id="dKpis"></div>
       <div class="card">
-        <input class="big-search" id="dQ" inputmode="numeric" placeholder="예약번호 6자리 또는 휴대폰 뒷 4자리 · 이름">
-        <p class="muted" style="margin:8px 0 0">금찾기 앱에서 예약번호를 입력하면 입장 인원이 자동으로 올라갑니다. 앱을 쓸 수 없는 경우에만 여기서 직접 처리하세요.</p>
+        <input class="big-search" id="dQ" inputmode="numeric" placeholder="휴대폰 뒷 4자리 · 휴대폰번호 · 이름">
+        <p class="muted" style="margin:8px 0 0">금찾기 앱에서 본인 휴대폰번호를 넣으면 입장 인원이 자동으로 올라갑니다. 앱을 쓸 수 없는 경우에만 여기서 직접 처리하세요.</p>
       </div>
       <div id="dList"></div>
     </section>
@@ -385,9 +385,9 @@ async function loadList(){
   const rows = LIST.filter(x => f === "all" || x.status === f);
   const act = LIST.filter(x => x.status === "active");
   $("lSum").textContent = `${dLabel(date)} · 예약 ${act.length}건 ${n0(act.reduce((a,x)=>a+x.party,0))}명 · 입장 ${n0(act.reduce((a,x)=>a+x.checked_in,0))}명 · 표시 ${rows.length}건`;
-  $("lTbl").innerHTML = `<thead><tr><th>#</th><th>예약번호</th><th>이름</th><th>휴대폰</th><th class="n">인원</th><th>구성(출생연도·성별)</th><th>신청 시각</th><th>상태</th><th class="n">입장</th><th></th></tr></thead><tbody>${
-    rows.map((x,i) => `<tr><td>${i+1}</td><td class="code">${esc(x.code)}</td><td>${x.purged ? '<span class="muted">파기됨</span>' : esc(x.name)}${x.late ? ` <span class="chip upcoming" title="공개 마감 후 추가 접수 링크로 들어온 예약">추가 링크</span>` : ""}${x.same_src >= 3 ? ` <span class="chip full" title="같은 인터넷 연결에서 들어온 예약 수(매크로 의심 시 확인)">같은 접속 ${x.same_src}건</span>` : ""}</td><td>${esc(x.phone || "")}</td>
-      <td class="n">${x.party}</td><td>${(x.members||[]).map(m => `<span class="mem" title="${m.in ? "입장 " + kst(m.in_at) : "미입장"}">${esc(m.n || "동반자")} ${m.y}·${G[m.g]}${m.r ? " · " + esc(m.r + " " + (m.c || "")) : ""} <b class="code">${esc(m.code || "")}</b>${m.in ? " ✓" : ""}</span>`).join(" ")}</td>
+  $("lTbl").innerHTML = `<thead><tr><th>#</th><th>이름</th><th>휴대폰</th><th class="n">인원</th><th>구성(출생연도·성별)</th><th>신청 시각</th><th>상태</th><th class="n">입장</th><th></th></tr></thead><tbody>${
+    rows.map((x,i) => `<tr><td>${i+1}</td><td>${x.purged ? '<span class="muted">파기됨</span>' : esc(x.name)}${x.late ? ` <span class="chip upcoming" title="공개 마감 후 추가 접수 링크로 들어온 예약">추가 링크</span>` : ""}${x.same_src >= 3 ? ` <span class="chip full" title="같은 인터넷 연결에서 들어온 예약 수(매크로 의심 시 확인)">같은 접속 ${x.same_src}건</span>` : ""}</td><td>${esc(x.phone || "")}</td>
+      <td class="n">${x.party}</td><td>${(x.members||[]).map(m => `<span class="mem" title="${m.in ? "입장 " + kst(m.in_at) : "미입장"}">${esc(m.n || "동반자")} ${m.y}·${G[m.g]}${m.r ? " · " + esc(m.r + " " + (m.c || "")) : ""}${m.seq > 1 && m.p ? " · " + esc(m.p) : ""}${m.in ? " ✓" : ""}</span>`).join(" ")}</td>
       <td>${kst(x.created_at)}</td><td><span class="chip ${x.status}">${x.status === "active" ? "예약" : "취소" + (x.cancelled_by === "admin" ? "(관리자)" : "")}</span></td>
       <td class="n">${x.checked_in}</td>
       <td>${x.status === "active" ? `<button class="b sm danger" data-cx="${x.id}">취소</button>` : `<button class="b sm ghost" data-rs="${x.id}">복구</button>`}</td></tr>`).join("")
@@ -403,14 +403,14 @@ async function adminCancel(id, restore){
 }
 
 // ── 엑셀
-function membersText(ms){ return (ms || []).slice(1).map(m => `${m.n || "동반자"}(${m.y}/${G[m.g]}/${m.r ? m.r + " " + (m.c || "") + "/" : ""}${m.code || ""})`).join(", "); }
+function membersText(ms){ return (ms || []).slice(1).map(m => `${m.n || "동반자"}(${m.y}/${G[m.g]}/${m.r ? m.r + " " + (m.c || "") + "/" : ""}${m.p || ""})`).join(", "); }
 function personRows(items){
   return items.flatMap(x => (x.members || []).map(m => ({ "운영일":x.op_date, "이름":m.n || (m.seq === 1 ? x.name : "동반자"), "구분":m.seq === 1 ? "대표자" : "동반자",
-    "출생연도":m.y, "성별":G[m.g], "거주 시·도":m.r || "", "거주 시·군·구":m.c || "", "예약번호":m.code || "", "대표자 휴대폰":x.phone || "", "예약 상태":x.status === "active" ? "예약" : "취소", "접수 경로":x.late ? "추가 링크" : "공개", "입장":m.in ? "입장" : "", "입장 시각":kstS(m.in_at) })));
+    "출생연도":m.y, "성별":G[m.g], "거주 시·도":m.r || "", "거주 시·군·구":m.c || "", "휴대폰":m.p || "", "대표자 휴대폰":x.phone || "", "예약 상태":x.status === "active" ? "예약" : "취소", "접수 경로":x.late ? "추가 링크" : "공개", "입장":m.in ? "입장" : "", "입장 시각":kstS(m.in_at) })));
 }
 function rowsForXls(items){
-  return items.map(x => ({ "운영일":x.op_date, "예약번호":x.code, "이름":x.name || "(파기됨)", "휴대폰":x.phone || "", "인원":x.party,
-    "대표자 출생연도":x.members?.[0]?.y ?? "", "대표자 성별":G[x.members?.[0]?.g] ?? "", "동반자(출생연도/성별)":membersText(x.members),
+  return items.map(x => ({ "운영일":x.op_date, "이름":x.name || "(파기됨)", "휴대폰":x.phone || "", "인원":x.party,
+    "대표자 출생연도":x.members?.[0]?.y ?? "", "대표자 성별":G[x.members?.[0]?.g] ?? "", "동반자(출생연도/성별/거주지/휴대폰)":membersText(x.members),
     "상태":x.status === "active" ? "예약" : "취소", "신청 시각":kstS(x.created_at), "취소 시각":kstS(x.cancelled_at), "입장 인원":x.checked_in }));
 }
 function saveXls(sheets, name){
@@ -423,7 +423,7 @@ function saveXls(sheets, name){
 async function exportRange(from, to, cancelled){
   const r = await rpc("rsv_admin_export", { p_key:KEY, p_from:from, p_to:to, p_include_cancelled:cancelled });
   if(!r.ok) return alert(r.msg);
-  saveXls([["예약명단", rowsForXls(r.items)], ["개인별 예약번호", personRows(r.items)]], `금찾기_예약명단_${from}${from === to ? "" : "_" + to}.xlsx`);
+  saveXls([["예약명단", rowsForXls(r.items)], ["사람별 명단", personRows(r.items)]], `금찾기_예약명단_${from}${from === to ? "" : "_" + to}.xlsx`);
 }
 
 // ── 현장 확인
@@ -445,7 +445,7 @@ async function deskSearch(){
   $("dList").innerHTML = items.map(x => `<div class="card" style="margin-bottom:10px">
       <div class="small" style="margin-bottom:6px"><b>${esc(x.name || "")}</b> 외 ${x.party - 1}명 · ${esc(x.phone || "")} · 입장 <output id="o${x.id}">${x.checked_in}</output>/${x.party}</div>
       ${(x.members||[]).map(m => `<div class="fc" style="padding:6px 0;border-top:1px solid var(--line)">
-        <div><span class="code c">${esc(m.code || "")}</span> · <b>${esc(m.n || "동반자")}</b> <span class="muted">${m.seq === 1 ? "대표자" : "동반자"} · ${m.y}·${G[m.g]}${m.r ? " · " + esc(m.r + " " + (m.c || "")) : ""}</span></div>
+        <div><b>${esc(m.n || "동반자")}</b> <span class="c">${esc(m.p || "")}</span> <span class="muted">${m.seq === 1 ? "대표자" : "동반자"} · ${m.y}·${G[m.g]}${m.r ? " · " + esc(m.r + " " + (m.c || "")) : ""}</span></div>
         <button class="b sm ${m.in ? "" : "ghost"}" data-tg="${x.id}|${m.seq}|${m.in ? 0 : 1}">${m.in ? "입장 완료 ✓ (취소)" : "입장 처리"}</button></div>`).join("")}
       <div style="text-align:right;margin-top:8px"><button class="b sm ghost" data-all="${x.id}">전원 입장(${x.party}명)</button></div></div>`).join("")
     || `<p class="muted">오늘 예약 중 일치하는 항목이 없습니다.</p>`;
