@@ -105,6 +105,8 @@
   .steps b{color:var(--ink)}
   .mem .pname{margin-top:8px}
   .howto{margin:10px 0 6px;padding:14px 12px;border-radius:14px;background:#fff8e6;border:1px solid #efd9a4;font-size:15px;color:var(--muted);line-height:1.5}
+  .doneT{font-size:26px;font-weight:900;color:var(--night);margin:4px 0 2px}
+  .howto b.key{margin:0 0 10px;font-size:21px;color:#b07a10}
   .howto b{display:block;margin-top:4px;font-size:19px;color:var(--night);line-height:1.45}
   .code{font-size:46px;font-weight:900;letter-spacing:.18em;color:var(--night);margin:6px 0;font-variant-numeric:tabular-nums}
   .done .box{background:var(--gold-soft);border-radius:12px;padding:14px;margin:14px 0;text-align:left;font-size:15px}
@@ -177,12 +179,12 @@
   <!-- 3. 완료 -->
   <section id="secDone" class="hidden">
     <div class="card done">
-      <div class="muted">예약이 완료되었습니다</div>
-      <div class="howto">금찾기 시작 방법<br><b>시작 표식에 휴대폰을 대고<br>본인 휴대폰번호를 넣으세요</b></div>
+      <div class="doneT">예약이 완료되었습니다</div>
+      <div class="howto"><b class="key">예약번호는 본인의 휴대폰번호입니다</b>금찾기 시작 방법<b>시작 표식에 휴대폰을 대고<br>본인 휴대폰번호를 넣으세요</b></div>
       <div class="codes" id="dCodes"></div>
       <div class="box" id="dBox"></div>
       <ol class="steps" id="dSteps"></ol>
-      <p class="muted">따로 외울 번호는 없습니다. 사람마다 <b>예약할 때 적은 본인 휴대폰번호</b>가 열쇠예요. 예약 내용은 아래 '예약 조회'에서 이름과 휴대폰번호로 다시 확인할 수 있습니다.</p>
+      <p class="muted">따로 외울 번호는 없습니다. 사람마다 <b>예약할 때 적은 본인 휴대폰번호</b>가 예약번호예요. 예약 내용은 아래 '예약 조회'에서 이름과 휴대폰번호로 다시 확인할 수 있습니다.</p>
       <button class="btn ghost block" type="button" id="btnAgain">처음으로</button>
     </div>
   </section>
@@ -276,7 +278,7 @@ async function load(){
     `운영일별 <b>선착순 ${cap.toLocaleString()}명</b>, 1건에 <b>최대 ${INFO.max_party}명</b>까지 (대표자는 ${INFO.min_age}세 이상, 출생연도 기준)`,
     `같은 휴대폰 번호로 하루 1건 예약할 수 있으며, 토·일 각각 예약할 수 있습니다.`,
     `취소는 접수 마감(금 17:00) 전까지 가능하며, 취소된 자리는 바로 다시 열립니다.`,
-    `대표자·동반자 <b>모두 본인 휴대폰번호</b>를 적습니다. 현장에서 시작 표식에 휴대폰을 대고 <b>본인 휴대폰번호</b>를 넣으면 시작됩니다(1인 1일 1회). 같은 날 같은 번호는 한 사람만 예약할 수 있습니다.`,
+    `<b>예약번호는 따로 없고, 본인 휴대폰번호가 예약번호입니다.</b> 대표자·동반자 <b>모두 본인 휴대폰번호</b>를 적습니다. 현장에서 시작 표식에 휴대폰을 대고 <b>본인 휴대폰번호</b>를 넣으면 시작됩니다(1인 1일 1회). 같은 날 같은 번호는 한 사람만 예약할 수 있습니다.`,
     `금찾기는 <b>휴대폰 1대로 1회만</b> 참여할 수 있습니다. 동반자도 <b>각자 자기 휴대폰</b>이 있어야 하며, <b>본인 휴대폰이 없는 분(어린이 등)은 예약·참여할 수 없습니다</b>.`,
     `이 예약은 <b>금찾기 참여 예약</b>이며, 별빛정원 입장권이 아닙니다. 현장에서 <b>별빛정원 입장권(유료)</b>을 구매해 일반 관람객과 같은 입구로 들어간 뒤, 정원 안에서 <b>사전예약자만</b> 금찾기에 참여할 수 있습니다. 예약자 전용 입구는 따로 없습니다.`
   ].map(t=>`<li>${t}</li>`).join("");
@@ -435,7 +437,7 @@ async function lookup(){
       <div class="top"><b>${dLabel(x.op_date)} · ${x.party}명</b><span class="chip ${x.status==='active'?'open':'closed'}">${x.status==='active'?'예약 완료':'취소됨'}</span></div>
       <div class="codes">${(x.members || []).map(m => `<div class="p"><span class="who">${esc(m.name || "동반자")}<small>${m.seq === 1 ? "대표자" : "동반자"}${m.in ? " · 입장 완료" : ""}</small></span><span class="c">${m.ph4 ? "****-" + esc(m.ph4) : ""}</span></div>`).join("")}</div>
       <div class="times">${esc(timesText(x))}</div>
-      ${x.status === 'active' ? `<div class="howto">금찾기 시작 방법<b>시작 표식에 휴대폰을 대고 본인 휴대폰번호를 넣으세요</b></div><ol class="steps">${stepsHtml()}</ol>` : ""}
+      ${x.status === 'active' ? `<div class="howto"><b class="key">예약번호는 본인의 휴대폰번호입니다</b>금찾기 시작 방법<b>시작 표식에 휴대폰을 대고 본인 휴대폰번호를 넣으세요</b></div><ol class="steps">${stepsHtml()}</ol>` : ""}
       ${x.cancelable ? `<button class="btn danger" type="button" data-cancel="${x.op_date}|${esc(x.code)}">예약 취소</button>
          <span class="muted">${tLabel(x.close_at)}까지 취소할 수 있습니다.</span>` : (x.status==='active' ? `<span class="muted">${new Date(x.close_at) > new Date() ? "취소는 대표자 휴대폰번호로 조회해서 할 수 있습니다." : "취소 가능 기간이 지났습니다."}</span>` : "")}
     </div>`).join("");
