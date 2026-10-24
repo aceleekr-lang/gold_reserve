@@ -250,14 +250,16 @@ let INFO = null, SEL = null;
 let LATE = null; const LATE_K = (new URLSearchParams(location.search).get("k") || "").trim();
 async function checkLate(){
   if(!LATE_K) return;
-  try{ const r = await rpc("rsv_late_check", { p_late:LATE_K }); LATE = r.ok ? { k:LATE_K, date:r.op_date, until:r.until } : { expired:true }; }
+  try{ const r = await rpc("rsv_late_check", { p_late:LATE_K }); LATE = r.ok ? { k:LATE_K, date:r.op_date, to:r.date_to || r.op_date, until:r.until } : { expired:true }; }
   catch(e){ LATE = null; }
   const box = $("lateNote"); if(!box) return;
   box.classList.remove("hidden");
-  box.innerHTML = LATE && LATE.date ? `<b>추가 접수 링크</b>로 들어오셨습니다. ${dLabel(LATE.date)} 금찾기 예약을 <b>${tLabel(LATE.until)}</b>까지 받습니다. (정원이 차면 마감)`
+  box.innerHTML = LATE && LATE.date ? `<b>추가 접수 링크</b>로 들어오셨습니다. ${dLabel(LATE.date)}${LATE.to && LATE.to !== LATE.date ? " · " + dLabel(LATE.to) : ""} 금찾기 예약을 <b>${tLabel(LATE.until)}</b>까지 받습니다. 날짜마다 그날 행사 종료 전까지만 예약할 수 있어요. (정원이 차면 마감)`
     : `추가 접수 링크가 만료되었거나 올바르지 않습니다.`;
 }
-const lateOpen = d => LATE && LATE.date === d.op_date && Date.now() < new Date(LATE.until).getTime() && d.status === "closed";
+// 추가 접수: 대상 운영일(시작~끝) 안, 링크 마감 전, 그 운영일 종료 시각 전 (공개 접수가 마감·예정인 날만 대신 엶)
+const lateEnd = d => Math.min(new Date(LATE.until).getTime(), new Date(`${d.op_date}T${d.end_time || "23:59"}:00+09:00`).getTime());
+const lateOpen = d => !!(LATE && LATE.date && d.op_date >= LATE.date && d.op_date <= LATE.to && Date.now() < lateEnd(d) && (d.status === "closed" || d.status === "upcoming"));
 
 async function load(){
   try{
@@ -303,7 +305,7 @@ function renderDays(){
   box.innerHTML = INFO.days.map(d => {
     const chip = d.late ? "추가 접수" : { open:"접수중", full:"마감(정원)", upcoming:"접수 예정", closed:"접수 마감" }[d.status] || d.status;
     let foot;
-    if(d.status === "open") foot = `<span class="remain">${d.late ? `추가 접수 · 당일 ${tLabel(LATE.until).slice(-5)}까지` : "선착순 접수 중"}</span>
+    if(d.status === "open") foot = `<span class="remain">${d.late ? `추가 접수 · ${tLabel(new Date(lateEnd(d)).toISOString())}까지` : "선착순 접수 중"}</span>
         <button class="btn" type="button" data-pick="${d.op_date}">이 날 예약</button>`;
     else if(d.status === "upcoming") foot = `<span>${tLabel(d.open_at)} 접수 시작</span>`;
     else if(d.status === "full") foot = `<span>정원이 찼습니다. 취소가 나오면 다시 열립니다.</span>`;
