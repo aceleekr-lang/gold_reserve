@@ -391,10 +391,11 @@ async function loadList(){
       <td class="n">${x.party}</td><td>${(x.members||[]).map(m => `<span class="mem" title="${m.in ? "입장 " + kst(m.in_at) : "미입장"}">${esc(m.n || "동반자")} ${m.y}·${G[m.g]}${m.r ? " · " + esc(m.r + " " + (m.c || "")) : ""}${m.seq > 1 && m.p ? " · " + esc(m.p) : ""}${m.in ? " ✓" : ""}</span>`).join(" ")}</td>
       <td>${kst(x.created_at)}</td><td><span class="chip ${x.status}">${x.status === "active" ? "예약" : "취소" + (x.cancelled_by === "admin" ? "(관리자)" : "")}</span></td>
       <td class="n">${x.checked_in}</td>
-      <td>${x.status === "active" ? `<button class="b sm danger" data-cx="${x.id}">취소</button>` : `<button class="b sm ghost" data-rs="${x.id}">복구</button>`}</td></tr>`).join("")
+      <td style="white-space:nowrap">${x.purged ? "" : `<button class="b sm ghost" data-ed="${x.id}">수정</button> `}${x.status === "active" ? `<button class="b sm danger" data-cx="${x.id}">취소</button>` : `<button class="b sm ghost" data-rs="${x.id}">복구</button>`}</td></tr>`).join("")
     }</tbody>`;
   $("lTbl").querySelectorAll("[data-cx]").forEach(b => b.onclick = () => adminCancel(b.dataset.cx, false));
   $("lTbl").querySelectorAll("[data-rs]").forEach(b => b.onclick = () => adminCancel(b.dataset.rs, true));
+  $("lTbl").querySelectorAll("[data-ed]").forEach(b => b.onclick = () => openEdit(Number(b.dataset.ed)));
 }
 async function adminCancel(id, restore){
   if(!confirm(restore ? "이 예약을 복구할까요?" : "이 예약을 관리자 권한으로 취소할까요? 자리는 바로 다시 열립니다.")) return;
@@ -685,6 +686,53 @@ $("btnSmsGen").onclick = genSms; $("smsDate").onchange = genSms;
 $("btnSmsCopy").onclick = () => copyText("smsText", $("btnSmsCopy"), "본문 복사"); $("btnSmsPhones").onclick = () => copyText("smsPhones", $("btnSmsPhones"), "번호 복사");
 $("btnSet").onclick = saveSettings; $("btnKey").onclick = changeKey; $("btnPurge").onclick = purge;
 if(KEY) login(KEY);
+</script>
+<style>#edDlg .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#edDlg input,#edDlg select{width:100%;box-sizing:border-box}#edDlg::backdrop{background:rgba(0,0,0,.45)}</style>
+<dialog id="edDlg" style="border:0;border-radius:14px;padding:0;max-width:640px;width:calc(100% - 24px)">
+  <form method="dialog" style="padding:18px 18px 14px">
+    <h3 style="margin:0 0 4px">예약자 정보 수정</h3>
+    <p class="muted" id="edHead" style="margin:0 0 10px"></p>
+    <div id="edBody"></div>
+    <div class="err" id="edErr" role="alert" style="margin-top:8px"></div>
+    <p class="muted" style="margin:8px 0 0;font-size:13px">휴대폰번호는 금찾기 시작 열쇠입니다. 바꾸면 그 사람은 <b>새 번호</b>로 시작합니다. 같은 날 다른 사람이 쓰는 번호로는 바꿀 수 없습니다.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="b ghost" value="close">닫기</button></div>
+  </form>
+</dialog>
+<script>
+// ── 예약자 정보 수정 (관리자 전용)
+function openEdit(id){
+  const x = LIST.find(v => v.id === id); if(!x) return;
+  $("edHead").textContent = `${dLabel(x.op_date)} · ${x.name || ""} 외 ${x.party - 1}명`;
+  $("edErr").textContent = "";
+  $("edBody").innerHTML = (x.members || []).map(m => `<div class="card" style="margin:0 0 10px;padding:12px" data-seq="${m.seq}">
+      <div style="font-weight:700;margin-bottom:6px">${m.seq === 1 ? "대표자" : "동반자 " + (m.seq - 1)}${m.in ? ' <span class="chip open">입장 완료</span>' : ""}</div>
+      <div class="form-grid">
+        <label>이름<input data-f="n" maxlength="20" value="${esc(m.n || "")}"></label>
+        <label>휴대폰번호<input data-f="p" inputmode="tel" maxlength="17" value="${esc(m.p || "")}" placeholder="010-0000-0000"></label>
+        <label>출생연도<input data-f="y" inputmode="numeric" maxlength="4" value="${esc(String(m.y || ""))}"></label>
+        <label>성별<select data-f="g"><option value="M"${m.g === "M" ? " selected" : ""}>남</option><option value="F"${m.g === "F" ? " selected" : ""}>여</option></select></label>
+      </div>
+      <div style="text-align:right;margin-top:8px"><button type="button" class="b sm gold" data-save="${m.seq}">이 사람 저장</button></div></div>`).join("");
+  $("edBody").querySelectorAll("[data-save]").forEach(btn => btn.onclick = async () => {
+    const card = btn.closest("[data-seq]"), seq = Number(card.dataset.seq), m = x.members.find(v => v.seq === seq), set = {};
+    const val = f => card.querySelector(`[data-f="${f}"]`).value.trim();
+    if(val("n") !== (m.n || "")) set.n = val("n");
+    if(val("p").replace(/\D/g, "") !== String(m.p || "").replace(/\D/g, "")) set.p = val("p");
+    if(val("y") !== String(m.y || "")) set.y = val("y");
+    if(val("g") !== (m.g || "")) set.g = val("g");
+    if(!Object.keys(set).length){ $("edErr").textContent = "바뀐 내용이 없습니다."; return; }
+    if(set.p && !confirm(`${m.n || "이 사람"}의 휴대폰번호를 ${set.p}(으)로 바꿀까요?\n금찾기는 새 번호로 시작하게 됩니다.`)) return;
+    btn.disabled = true; $("edErr").textContent = "";
+    try{
+      const r = await rpc("rsv_admin_member_edit", { p_key:KEY, p_id:id, p_seq:seq, p_set:set });
+      if(!r.ok){ $("edErr").textContent = r.msg || "저장하지 못했습니다."; return; }
+      toast(r.msg || "수정했습니다."); await loadList(); openEdit(id);
+    }catch(e){ $("edErr").textContent = e.message; }
+    finally{ btn.disabled = false; }
+  });
+  $("edBody").querySelectorAll('[data-f="p"]').forEach(i => i.addEventListener("input", () => { const d = i.value.replace(/\D/g, "").slice(0, 11); i.value = d.length < 4 ? d : d.length < 8 ? d.slice(0,3) + "-" + d.slice(3) : d.slice(0,3) + "-" + d.slice(3, d.length - 4) + "-" + d.slice(-4); }));
+  const dlg = $("edDlg"); if(!dlg.open) dlg.showModal();
+}
 </script>
 </body>
 </html>
