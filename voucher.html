@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>지역상품권 교환권 · 영남루 별빛정원</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0f1a33">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--night:#0f1a33;--night2:#1c2b55;--gold:#e2bd6a;--gold2:#f3d892;--ink:#1d2433;--muted:#667089;--line:#dfe3ec;--bg:#f4f5f9;--ok:#1f8a55;--err:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:17px;line-height:1.6;word-break:keep-all}
+  header{background:radial-gradient(120% 90% at 80% -10%,#2c3f78 0%,var(--night2) 45%,var(--night) 100%);color:#fff;padding:28px 16px 22px;text-align:center}
+  header small{color:var(--gold2);font-size:14px}
+  header h1{margin:6px 0 4px;font-size:24px;line-height:1.35}
+  header p{margin:0;color:#cfd6ea;font-size:15px}
+  main{max-width:520px;margin:0 auto;padding:16px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin:0 0 14px}
+  label{display:block;font-weight:700;margin:12px 0 6px}
+  input{width:100%;font:inherit;font-size:18px;padding:12px;border:1px solid #c9cfdd;border-radius:10px;min-height:50px}
+  .btn{display:block;width:100%;margin-top:16px;font:inherit;font-weight:800;font-size:18px;border:0;border-radius:12px;padding:14px;background:var(--night);color:#fff;cursor:pointer}
+  .btn:disabled{opacity:.6}
+  .err{color:var(--err);font-weight:700;margin-top:10px;min-height:1em}
+  .muted{color:var(--muted);font-size:15px}
+  /* 교환권 */
+  .ticket{position:relative;overflow:hidden;border-radius:18px;padding:22px 18px;color:#fff;text-align:center;
+    background:linear-gradient(135deg,#1c2b55,#0f1a33 60%,#2a2350);border:2px solid var(--gold)}
+  .ticket::after{content:"";position:absolute;inset:-40%;background:linear-gradient(105deg,transparent 40%,rgba(243,216,146,.28) 50%,transparent 60%);animation:shine 2.6s linear infinite}
+  @keyframes shine{from{transform:translateX(-60%)}to{transform:translateX(60%)}}
+  .ticket .t1{color:var(--gold2);font-size:15px}
+  .ticket .t2{font-size:26px;font-weight:900;margin:4px 0 12px}
+  .ticket .who{font-size:20px;font-weight:700}
+  .ticket .code{display:inline-block;margin:14px 0 6px;padding:10px 16px;border-radius:12px;background:#fff;color:var(--night);font-size:32px;font-weight:900;letter-spacing:.14em;font-variant-numeric:tabular-nums}
+  .ticket .clock{font-size:16px;color:#dfe5f5;font-variant-numeric:tabular-nums}
+  .stamp{display:inline-block;margin-top:12px;padding:6px 14px;border-radius:999px;font-weight:800;font-size:16px}
+  .stamp.ready{background:var(--gold);color:var(--night)}
+  .stamp.done{background:#fff;color:var(--err);border:2px solid var(--err)}
+  .ticket.used{filter:grayscale(.7)}
+  ol{padding-left:22px;margin:8px 0 0} li{margin:6px 0}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <small>영남루 별빛정원 「영남루에 흩어진 별을 찾아라」</small>
+  <h1>10월 24일 우천 취소 보상<br>지역상품권 교환권</h1>
+  <p>예약하신 분 한 분마다 상품권 1장</p>
+</header>
+<main>
+  <section id="secForm" class="card">
+    <p style="margin:0">10월 24일(토)에 예약할 때 적은 <b>이름</b>과 <b>본인 휴대폰번호</b>를 넣어 주세요. 동반자도 각자 본인 이름·번호로 받으실 수 있어요.</p>
+    <label for="nm">이름</label>
+    <input id="nm" autocomplete="name" maxlength="20" placeholder="홍길동">
+    <label for="ph">휴대폰번호</label>
+    <input id="ph" type="tel" inputmode="tel" autocomplete="tel" maxlength="13" placeholder="010-0000-0000">
+    <button class="btn" id="btnGo" type="button">교환권 받기</button>
+    <div class="err" id="err" role="alert"></div>
+  </section>
+
+  <section id="secTicket" class="hidden">
+    <div class="ticket" id="ticket">
+      <div class="t1">10월 24일 우천 취소 보상</div>
+      <div class="t2">지역상품권 1장 교환권</div>
+      <div class="who" id="who"></div>
+      <div class="code" id="code"></div>
+      <div class="clock" id="clock"></div>
+      <div class="stamp ready" id="stamp">교환 가능</div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <b>교환 방법</b>
+      <ol>
+        <li>남은 운영일 <b>10/31(토)·11/1(일)·11/7(토)·11/8(일)</b> 행사 시간에</li>
+        <li>별빛정원 안 <b>경품 수령소</b>에서 이 화면을 보여 주세요.</li>
+        <li>진행요원이 교환권 번호를 확인하고 상품권 1장을 드립니다. <b>1인 1회</b>만 교환됩니다.</li>
+      </ol>
+      <p class="muted" id="until" style="margin:10px 0 0"></p>
+      <p class="muted" style="margin:6px 0 0">이 화면은 이 링크에서 이름·번호를 다시 넣으면 언제든 다시 볼 수 있어요. 캡처한 화면이 아니라 이 화면을 보여 주세요(시각이 움직입니다).</p>
+    </div>
+    <div class="card" id="staffBox">
+      <b>직원 확인 (수령소 진행요원만)</b>
+      <p class="muted" style="margin:4px 0 0">상품권을 드린 뒤 직원이 PIN을 넣어 사용 완료로 바꿉니다. 참가자는 누르지 마세요.</p>
+      <label for="pin">직원 PIN</label>
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="PIN">
+      <button class="btn" id="btnUse" type="button" style="background:#b03a2e">사용 완료 처리</button>
+      <div class="err" id="pinErr" role="alert"></div>
+    </div>
+    <button class="btn" id="btnBack" type="button" style="background:#fff;color:var(--night);border:1px solid var(--line)">처음으로</button>
+  </section>
+
+  <p class="muted" style="text-align:center">주최 밀양시 · 문의 055-359-5869 (밀양시 관광진흥과)</p>
+</main>
+<script>
+const SUPABASE_URL = window.RSV_URL || "https://snaldhxucwsaifqrccih.supabase.co";
+const SUPABASE_ANON_KEY = window.RSV_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuYWxkaHh1Y3dzYWlmcXJjY2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzIwNjAsImV4cCI6MjEwMzg0ODA2MH0.TUdhun_cBHsool0e2FZOOfznjFoC_u5B0MJCl1dTDhI";
+const $ = id => document.getElementById(id);
+const K = (new URLSearchParams(location.search).get("k") || "").trim();
+async function rpc(fn, args){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method:"POST",
+    headers:{ "Content-Type":"application/json", apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}` },
+    body: JSON.stringify(args || {}) });
+  if(!res.ok) throw new Error("서버 연결에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+  return res.json();
+}
+function fmtPhone(v){ let d = v.replace(/\D/g,""); if(/^82(1\d)/.test(d)) d = "0" + d.slice(2); d = d.slice(0,11);
+  return d.length<4 ? d : d.length<8 ? `${d.slice(0,3)}-${d.slice(3)}` : d.length<11 ? `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}` : `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`; }
+const kst = iso => new Date(iso).toLocaleString("ko-KR", { timeZone:"Asia/Seoul", month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit", hour12:false });
+$("ph").addEventListener("input", e => e.target.value = fmtPhone(e.target.value));
+if(!K) { $("err").textContent = "문자로 받은 교환권 링크로 들어와 주세요."; $("btnGo").disabled = true; }
+let tick = null, CUR = null;
+function showTicket(r){
+  $("who").textContent = `${r.name}님 · ****-${r.ph4}`;
+  $("code").textContent = r.code;
+  $("until").textContent = r.until ? `교환 마감: ${kst(r.until)}` : "";
+  const used = !!r.redeemed;
+  $("ticket").classList.toggle("used", used);
+  $("stamp").className = "stamp " + (used ? "done" : "ready");
+  $("stamp").textContent = used ? `교환 완료 · ${kst(r.redeemed_at)}` : "교환 가능";
+  $("staffBox").classList.toggle("hidden", used); $("pin").value = ""; $("pinErr").textContent = "";
+  CUR = r;
+  clearInterval(tick);
+  const draw = () => $("clock").textContent = new Date().toLocaleString("ko-KR", { timeZone:"Asia/Seoul", month:"long", day:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+  draw(); tick = setInterval(draw, 1000);
+  $("secForm").classList.add("hidden"); $("secTicket").classList.remove("hidden");
+  window.scrollTo(0, 0);
+}
+$("btnGo").onclick = async () => {
+  const name = $("nm").value.trim(), phone = $("ph").value;
+  $("err").textContent = "";
+  if(name.length < 2) return $("err").textContent = "이름을 입력해 주세요.";
+  if(!/^01\d{8,9}$/.test(phone.replace(/\D/g,""))) return $("err").textContent = "휴대폰번호를 정확히 입력해 주세요.";
+  $("btnGo").disabled = true; $("btnGo").textContent = "확인 중…";
+  try{
+    const r = await rpc("rsv_voucher_claim", { p_k:K, p_name:name, p_phone:phone });
+    if(!r.ok){ $("err").textContent = r.msg || "확인하지 못했습니다."; return; }
+    showTicket(r);
+  }catch(e){ $("err").textContent = e.message; }
+  finally{ $("btnGo").disabled = !K; $("btnGo").textContent = "교환권 받기"; }
+};
+$("btnUse").onclick = async () => {
+  const pin = $("pin").value.trim(); $("pinErr").textContent = "";
+  if(!pin) return $("pinErr").textContent = "직원 PIN을 넣어 주세요.";
+  if(!confirm(`${CUR.name}님 교환권(${CUR.code})을 사용 완료로 바꿀까요?\n상품권 1장을 드린 뒤 눌러 주세요.`)) return;
+  $("btnUse").disabled = true;
+  try{
+    const r = await rpc("rsv_voucher_redeem_pin", { p_k:K, p_code:CUR.code, p_pin:pin });
+    if(r.redeemed){ showTicket({ ...CUR, redeemed:true, redeemed_at:r.redeemed_at }); alert(r.msg); return; }
+    $("pinErr").textContent = r.msg || "처리하지 못했습니다.";
+  }catch(e){ $("pinErr").textContent = e.message; }
+  finally{ $("btnUse").disabled = false; }
+};
+$("btnBack").onclick = () => { clearInterval(tick); $("secTicket").classList.add("hidden"); $("secForm").classList.remove("hidden"); };
+</script>
+</body></html>

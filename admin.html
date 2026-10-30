@@ -162,6 +162,24 @@
       <div id="dList"></div>
     </section>
 
+    <!-- 보상 교환 (10/24 우천 취소) -->
+    <section data-tab="vch" class="hidden">
+      <div class="toolbar"><h2 style="margin:0;flex:1">우천 취소 보상 교환 · <span id="vDate"></span></h2><button class="b ghost sm" type="button" id="vReload">새로고침</button></div>
+      <div class="kpis" id="vKpis"></div>
+      <div class="card">
+        <input class="big-search" id="vQ" placeholder="교환권 번호 8자리 · 휴대폰 뒷 4자리 · 이름">
+        <p class="muted" style="margin:8px 0 0">참가자 휴대폰의 <b>교환권 화면</b>(시각이 움직이는 화면)을 보고 번호로 찾아 [교환 처리]를 누른 뒤 상품권 1장을 드립니다. 링크를 못 받은 분은 이름·번호로 찾아 처리할 수 있습니다.</p>
+      </div>
+      <div id="vList"></div>
+      <div class="card hidden" id="vAdmin">
+        <h3 style="margin-top:0">관리자: 링크·문자 발송용</h3>
+        <label>교환권 링크<span style="display:flex;gap:6px"><input id="vLink" readonly style="flex:1"><button class="b ghost" type="button" id="vLinkCopy">복사</button></span></label>
+        <label style="margin-top:8px">대상자 휴대폰번호 (대표자·동반자 모두, 쉼표 구분)<textarea id="vPhones" readonly rows="3" style="width:100%"></textarea></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="b ghost" type="button" id="vPhonesCopy">번호 복사</button>
+          <button class="b gold" type="button" id="vXls">전체 명단 엑셀 내려받기 (번호·교환 현황)</button></div>
+      </div>
+    </section>
+
     <!-- 운영일 -->
     <section data-tab="days" class="hidden">
       <h2>운영일 관리</h2>
@@ -327,9 +345,9 @@ async function login(k){
 }
 function logout(){ try{ sessionStorage.removeItem("rsv_key"); }catch(e){} location.reload(); }
 
-const TABS = [["ov","현황"],["list","명단"],["sms","문자"],["desk","현장 확인"],["days","운영일"],["stats","통계"],["set","설정"]];
+const TABS = [["ov","현황"],["list","명단"],["sms","문자"],["desk","현장 확인"],["vch","보상 교환"],["days","운영일"],["stats","통계"],["set","설정"]];
 function buildTabs(){
-  const t = ROLE === "admin" ? TABS : TABS.filter(x => x[0] === "desk");
+  const t = ROLE === "admin" ? TABS : TABS.filter(x => x[0] === "desk" || x[0] === "vch");
   $("tabs").innerHTML = t.map(([k,l]) => `<button role="tab" data-k="${k}">${l}</button>`).join("");
   $("tabs").querySelectorAll("button").forEach(b => b.onclick = () => show(b.dataset.k));
 }
@@ -340,6 +358,7 @@ function show(k, date){
   if(k === "list") { fillDateSelect(); if(date) $("lDate").value = date; loadList(); }
   if(k === "sms") initSms();
   if(k === "desk") renderDesk();
+  if(k === "vch") loadVch();
   if(k === "days"){ renderDays(); loadLate(); }
   if(k === "stats") { if(!$("sFrom").value) initStatRange(); loadStats(); }
   if(k === "set") loadSettings();
@@ -733,6 +752,53 @@ function openEdit(id){
   $("edBody").querySelectorAll('[data-f="p"]').forEach(i => i.addEventListener("input", () => { const d = i.value.replace(/\D/g, "").slice(0, 11); i.value = d.length < 4 ? d : d.length < 8 ? d.slice(0,3) + "-" + d.slice(3) : d.slice(0,3) + "-" + d.slice(3, d.length - 4) + "-" + d.slice(-4); }));
   const dlg = $("edDlg"); if(!dlg.open) dlg.showModal();
 }
+</script>
+<script>
+// ── 우천 취소 보상 교환
+let vTimer = null, vSeq = 0;
+async function loadVch(){
+  const q = $("vQ").value.trim(), my = ++vSeq;
+  const r = await rpc("rsv_admin_vouchers", { p_key:KEY, p_q:q || null });
+  if(my !== vSeq) return;   // 더 최근 검색 결과만 화면에 (잘못된 사람 교환 방지)
+  if(!r.ok){ $("vList").innerHTML = `<div class="err">${esc(r.msg)}</div>`; return; }
+  $("vDate").textContent = r.op_date ? dLabel(r.op_date) : "(설정 전)";
+  $("vKpis").innerHTML = [["대상", n0(r.total) + "명", "10/24 예약자(취소 제외)"], ["링크로 받음", n0(r.claimed) + "명", "교환권 화면 발급"], ["교환 완료", n0(r.redeemed) + "장", "상품권 지급"], ["남음", n0(r.total - r.redeemed) + "명", "아직 교환 안 함"]]
+    .map(([l,v,t]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${t}</div></div>`).join("");
+  if(ROLE === "admin" && r.link_key){ $("vAdmin").classList.remove("hidden"); $("vLink").value = `${location.origin}/voucher?k=${r.link_key}`; $("vPhones").value = r.phones || ""; }
+  const items = q ? r.items : r.items.filter(x => !x.redeemed_at).slice(0, 30);
+  $("vList").innerHTML = (q ? "" : `<p class="muted">검색하지 않으면 아직 교환하지 않은 분 중 30명만 보입니다.</p>`) + items.map(x => `<div class="card" style="margin-bottom:8px">
+      <div class="fc"><div><b style="font-size:18px">${esc(x.name || "")}</b> <span class="muted">${esc(x.phone || "")}${x.seq > 1 ? " · 동반자" : " · 대표자"}</span><br>
+        <span class="code" style="font-size:20px">${esc(x.code || "—")}</span> <span class="muted">${x.claimed_at ? "링크 받음" : "링크 미수령"}</span></div>
+      ${x.redeemed_at ? `<div style="text-align:right"><span class="chip closed">교환 완료 ${kst(x.redeemed_at).slice(5)}</span><br><span class="muted">처리: ${esc(x.redeemed_by === "admin" ? "관리자" : x.redeemed_by === "staff" ? "현장 확인 탭" : (x.redeemed_by || ""))}</span>${ROLE === "admin" ? `<br><button class="b sm ghost" data-vu="${x.booking_id}|${x.seq}" style="margin-top:6px">교환 취소</button>` : ""}</div>`
+        : `<button class="b gold" data-vr="${x.booking_id}|${x.seq}|${esc(x.name || "")}">교환 처리</button>`}</div></div>`).join("")
+    + (q && !items.length ? `<p class="muted">찾는 분이 없습니다. 10/24 예약 명단(취소 제외)에 있는 분만 대상입니다.</p>` : "");
+  $("vList").querySelectorAll("[data-vr]").forEach(b => b.onclick = async () => {
+    const [bid, seq, nm] = b.dataset.vr.split("|");
+    if(!confirm(`${nm}님에게 상품권 1장을 드리고 교환 처리할까요?`)) return;
+    b.disabled = true;
+    const x = await rpc("rsv_admin_voucher_redeem", { p_key:KEY, p_booking:Number(bid), p_seq:Number(seq) });
+    toast(x.msg || (x.ok ? "교환 완료" : "처리하지 못했습니다")); await loadVch();
+  });
+  $("vList").querySelectorAll("[data-vu]").forEach(b => b.onclick = async () => {
+    const [bid, seq] = b.dataset.vu.split("|");
+    if(!confirm("교환 처리를 취소할까요? (상품권을 돌려받은 경우에만)")) return;
+    const x = await rpc("rsv_admin_voucher_redeem", { p_key:KEY, p_booking:Number(bid), p_seq:Number(seq), p_undo:true });
+    toast(x.msg); await loadVch();
+  });
+}
+$("vQ").addEventListener("input", () => { clearTimeout(vTimer); vSeq++; $("vList").innerHTML = `<p class="muted">찾는 중…</p>`; vTimer = setTimeout(loadVch, 350); });
+$("vReload").onclick = loadVch;
+$("vLinkCopy").onclick = () => copyText("vLink", $("vLinkCopy"), "복사");
+$("vPhonesCopy").onclick = () => copyText("vPhones", $("vPhonesCopy"), "번호 복사");
+$("vXls").onclick = async () => {
+  const r = await rpc("rsv_admin_vouchers", { p_key:KEY, p_q:null });
+  if(!r.ok) return alert(r.msg);
+  const by = v => v === "admin" ? "관리자" : v === "staff" ? "현장 확인 탭" : (v || "");
+  const rows = r.items.map((x, i) => ({ "번호":i+1, "이름":x.name || "", "구분":x.seq === 1 ? "대표자" : "동반자", "휴대폰":x.phone || "(번호 없음)",
+    "교환권 번호":x.code || "", "링크로 받음":x.claimed_at ? kstS(x.claimed_at) : "", "교환 완료":x.redeemed_at ? kstS(x.redeemed_at) : "", "처리":by(x.redeemed_by) }));
+  const send = [...new Set(r.items.map(x => x.phone).filter(Boolean))].map((p, i) => ({ "번호":i+1, "휴대폰":p }));
+  saveXls([["보상 대상자", rows], ["문자 발송 번호", send]], `별빛정원_10월24일_보상교환권_${new Date().toISOString().slice(0,10)}.xlsx`);
+};
 </script>
 </body>
 </html>
