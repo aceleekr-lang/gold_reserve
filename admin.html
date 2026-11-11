@@ -176,7 +176,8 @@
         <label>교환권 링크<span style="display:flex;gap:6px"><input id="vLink" readonly style="flex:1"><button class="b ghost" type="button" id="vLinkCopy">복사</button></span></label>
         <label style="margin-top:8px">대상자 휴대폰번호 (대표자·동반자 모두, 쉼표 구분)<textarea id="vPhones" readonly rows="3" style="width:100%"></textarea></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="b ghost" type="button" id="vPhonesCopy">번호 복사</button>
-          <button class="b gold" type="button" id="vXls">전체 명단 엑셀 내려받기 (번호·교환 현황)</button></div>
+          <button class="b gold" type="button" id="vXls">전체 명단 엑셀 내려받기 (번호·교환 현황)</button>
+          <button class="b" type="button" id="vXlsLeft">미교환자만 엑셀 내려받기 (이름·전화번호)</button></div>
       </div>
     </section>
 
@@ -790,6 +791,14 @@ $("vQ").addEventListener("input", () => { clearTimeout(vTimer); vSeq++; $("vList
 $("vReload").onclick = loadVch;
 $("vLinkCopy").onclick = () => copyText("vLink", $("vLinkCopy"), "복사");
 $("vPhonesCopy").onclick = () => copyText("vPhones", $("vPhonesCopy"), "번호 복사");
+$("vXlsLeft").onclick = async () => {
+  const r = await rpc("rsv_admin_vouchers", { p_key:KEY, p_q:null });
+  if(!r.ok) return alert(r.msg);
+  const left = r.items.filter(x => !x.redeemed_at);
+  const rows = left.map((x, i) => ({ "번호":i+1, "이름":x.name || "", "전화번호":x.phone || "(번호 없음)" }));
+  saveXls([["미교환자", rows]], `별빛정원_10월24일_보상_미교환자_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast(`미교환 ${left.length}명을 내려받았습니다.`);
+};
 $("vXls").onclick = async () => {
   const r = await rpc("rsv_admin_vouchers", { p_key:KEY, p_q:null });
   if(!r.ok) return alert(r.msg);
