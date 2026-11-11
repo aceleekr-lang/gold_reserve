@@ -27,11 +27,34 @@
   .muted{color:var(--muted);font-size:15px}
   .hidden{display:none}
   .testbar{background:#fff3cd;border:1px solid #e9cf7a;color:#6b5414;border-radius:10px;padding:8px 12px;font-weight:700;font-size:15px;margin:0 0 12px;text-align:center}
-  /* 룰렛 */
-  .wheelBox{position:relative;width:min(86vw,340px);aspect-ratio:1;margin:8px auto 4px}
-  .wheel{width:100%;height:100%;border-radius:50%;transition:transform 4.2s cubic-bezier(.17,.67,.12,1);box-shadow:0 6px 18px rgba(0,0,0,.18)}
-  .pin{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:26px solid var(--err);filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));z-index:2}
-  .hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22%;aspect-ratio:1;border-radius:50%;background:#fff;border:4px solid var(--gold);display:grid;place-items:center;font-weight:900;color:var(--teal2);font-size:14px}
+  /* 가챠 */
+  .gacha{position:relative;width:230px;height:360px;margin:10px auto 0}
+  .dome{position:absolute;left:15px;top:0;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95) 0 8%,rgba(255,255,255,.35) 9% 30%,rgba(214,228,232,.55) 70%);border:5px solid var(--teal2);overflow:hidden;box-shadow:inset 0 -10px 20px rgba(63,85,96,.18)}
+  .dome b{position:absolute;width:46px;height:46px;border-radius:50%;background:linear-gradient(var(--c) 50%,#fbf8f2 50%);border:2px solid rgba(0,0,0,.12)}
+  .dome.shake b{animation:jig .18s ease-in-out infinite alternate}
+  .dome.shake b:nth-child(2n){animation-duration:.23s}.dome.shake b:nth-child(3n){animation-duration:.15s}
+  @keyframes jig{from{transform:translate(-3px,2px) rotate(-12deg)}to{transform:translate(3px,-4px) rotate(14deg)}}
+  .gbody{position:absolute;left:5px;top:185px;width:220px;height:135px;border-radius:14px 14px 22px 22px;background:linear-gradient(var(--teal) ,var(--teal2));box-shadow:0 8px 18px rgba(0,0,0,.2)}
+  .gbody .lbl{position:absolute;left:0;right:0;top:12px;text-align:center;color:#fff;font-weight:900;font-size:15px;letter-spacing:.08em}
+  .knob{position:absolute;left:26px;top:44px;width:56px;height:56px;border-radius:50%;background:var(--gold);border:4px solid #fff3d6;box-shadow:0 3px 6px rgba(0,0,0,.25)}
+  .knob::after{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:12px;margin-left:-6px;border-radius:6px;background:#fff3d6}
+  .knob.turn{animation:turn 1s cubic-bezier(.5,0,.4,1)}
+  @keyframes turn{to{transform:rotate(360deg)}}
+  .slot{position:absolute;right:26px;top:48px;width:72px;height:60px;border-radius:10px;background:#22313a;box-shadow:inset 0 6px 10px rgba(0,0,0,.5)}
+  .cap{position:absolute;right:38px;top:236px;width:50px;height:50px;opacity:0;z-index:3}
+  .cap i{position:absolute;left:0;width:50px;height:25px;border:2px solid rgba(0,0,0,.15)}
+  .cap .t{top:0;border-radius:25px 25px 0 0;background:var(--gold);border-bottom:0}
+  .cap .u{bottom:0;border-radius:0 0 25px 25px;background:#fbf8f2;border-top:0}
+  .cap.drop{animation:drop .7s cubic-bezier(.3,1.4,.6,1) forwards}
+  @keyframes drop{0%{opacity:1;transform:translateY(-24px) scale(.5)}70%{opacity:1;transform:translateY(56px) scale(1.4)}85%{transform:translateY(46px) scale(1.4)}100%{opacity:1;transform:translateY(56px) scale(1.4)}}
+  .cap.wob{opacity:1;transform:translateY(56px) scale(1.4);animation:wob .22s ease-in-out 4 alternate}
+  @keyframes wob{from{transform:translateY(56px) scale(1.4) rotate(-10deg)}to{transform:translateY(56px) scale(1.4) rotate(10deg)}}
+  .cap.open{opacity:1;transform:translateY(56px) scale(1.4)}
+  .cap.open .t{animation:opT .5s forwards}.cap.open .u{animation:opU .5s forwards}
+  @keyframes opT{to{transform:translate(-14px,-26px) rotate(-35deg);opacity:0}} @keyframes opU{to{transform:translate(14px,20px) rotate(25deg);opacity:0}}
+  .reveal{margin-top:6px;animation:pop .45s cubic-bezier(.3,1.5,.6,1)}
+  @keyframes pop{from{transform:scale(.6);opacity:0}}
+  .reveal .nm{font-size:28px;font-weight:900;color:var(--teal2);margin:4px 0}
   /* 쿠폰 */
   .cpn{position:relative;overflow:hidden;border-radius:14px;background:linear-gradient(90deg,#eef2ec 0%,#e3ebe8 60%,#f8f4ef 100%);border:1px solid #cdd7d2;padding:16px 16px 14px}
   .cpn::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(170deg,rgba(91,116,128,.07) 0 1px,transparent 1px 7px);pointer-events:none}
@@ -70,7 +93,7 @@
 
   <!-- 1. 로그인 -->
   <section class="card" id="secLogin">
-    <p style="margin:0">10월 24일(토) 예약할 때 적은 <b>이름</b>과 <b>본인 휴대폰번호</b>를 넣어 주세요. 한 분에 <b>한 번</b> 룰렛을 돌려 상품권 1장(9,900원)을 받습니다.</p>
+    <p style="margin:0">10월 24일(토) 예약할 때 적은 <b>이름</b>과 <b>본인 휴대폰번호</b>를 넣어 주세요. 한 분에 <b>한 번</b> 뽑기를 해서 상품권 1장(9,900원)을 받습니다.</p>
     <label for="nm">이름</label>
     <input id="nm" autocomplete="name" maxlength="20" placeholder="홍길동">
     <label for="ph">휴대폰번호</label>
@@ -79,12 +102,16 @@
     <div class="err" id="err" role="alert"></div>
   </section>
 
-  <!-- 2. 룰렛 -->
+  <!-- 2. 뽑기 -->
   <section class="card hidden" id="secWheel" style="text-align:center">
     <div style="font-weight:800;font-size:19px" id="hello"></div>
-    <p class="muted" style="margin:4px 0 6px">룰렛을 돌리면 상품권을 쓸 수 있는 <b>업체</b>가 정해집니다. 한 번만 돌릴 수 있어요.</p>
-    <div class="wheelBox"><div class="pin"></div><svg class="wheel" id="wheel" viewBox="0 0 200 200"></svg><div class="hub">9,900</div></div>
-    <button class="btn gold" id="btnSpin" type="button">룰렛 돌리기</button>
+    <p class="muted" style="margin:4px 0 0">손잡이를 돌리면 캡슐이 나옵니다. 캡슐 안에 상품권을 쓸 <b>업체</b>가 들어 있어요. 한 번만 뽑을 수 있습니다.</p>
+    <div class="gacha"><div class="dome" id="dome"></div>
+      <div class="gbody"><div class="lbl">밀양 상품권 뽑기</div><div class="knob" id="knob"></div><div class="slot"></div></div>
+      <div class="cap" id="cap"><i class="t"></i><i class="u"></i></div></div>
+    <div id="reveal" class="reveal hidden"><div class="muted">🎉 당첨! 상품권 사용 업체는</div><div class="nm" id="rvShop"></div><div class="muted">9,900원 상품권</div>
+      <button class="btn" id="btnGo" type="button">내 상품권 보기</button></div>
+    <button class="btn gold" id="btnSpin" type="button">손잡이 돌려 뽑기</button>
     <div class="err" id="spinErr" role="alert"></div>
   </section>
 
@@ -142,29 +169,21 @@ function fmtPhone(v){ let d = v.replace(/\D/g,""); if(/^82(1\d)/.test(d)) d = "0
   return d.length<4 ? d : d.length<8 ? `${d.slice(0,3)}-${d.slice(3)}` : d.length<11 ? `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}` : `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`; }
 const kst = iso => new Date(iso).toLocaleString("ko-KR", { timeZone:"Asia/Seoul", month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit", hour12:false });
 $("ph").addEventListener("input", e => e.target.value = fmtPhone(e.target.value));
-let ME = null, ST = null, tick = null, rot = 0;
-const COLORS = ["#5b7480","#c8a24a","#7f9a8f","#a9b8bf","#3f5560","#d9c08a","#8aa3ad","#b9c9c2"];
+let ME = null, ST = null, tick = null;
+const CAPC = ["#c8a24a","#5b7480","#7f9a8f","#d98b6a","#8aa3ad","#b98fb0","#c8a24a","#6f8f7c","#d9c08a","#5b7480","#a9b8bf","#d98b6a"];
 function show(id){ ["secLogin","secWheel","secCoupon"].forEach(s => $(s).classList.toggle("hidden", s !== id)); window.scrollTo(0,0); }
-function drawWheel(names){
-  const n = names.length, R = 98, svg = $("wheel"); let h = "";
-  names.forEach((nm, i) => {
-    const a0 = (i / n) * 2 * Math.PI - Math.PI / 2, a1 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
-    const x0 = 100 + R * Math.cos(a0), y0 = 100 + R * Math.sin(a0), x1 = 100 + R * Math.cos(a1), y1 = 100 + R * Math.sin(a1);
-    h += `<path d="M100,100 L${x0},${y0} A${R},${R} 0 0,1 ${x1},${y1} Z" fill="${COLORS[i % COLORS.length]}" stroke="#fff" stroke-width="1.2"/>`;
-    const am = ((i + .5) / n) * 360 - 90, flip = am > 90 && am < 270 ? " rotate(180 100 100)" : "";
-    const short = nm.replace(/^행복한찹쌀꽈배기\((.+)\)$/, "꽈배기 $1").replace(/^행복한찹쌀꽈배기$/, "행복한찹쌀꽈배기");
-    const label = short.length > 10 ? short.slice(0, 9) + "…" : short;
-    h += `<text x="100" y="100" transform="rotate(${am} 100 100) translate(58 0)${flip}" text-anchor="middle" dominant-baseline="middle" font-size="${label.length > 6 ? 8 : 9.5}" font-weight="700" fill="#fff">${label.replace(/[&<>]/g, "")}</text>`;
-  });
-  svg.innerHTML = h + `<circle cx="100" cy="100" r="98" fill="none" stroke="#c8a24a" stroke-width="3"/>`;
+function fillDome(){
+  const pos = [[18,120],[62,138],[108,130],[146,112],[34,78],[82,92],[124,72],[150,40],[10,40],[56,46],[100,30],[30,4]];
+  $("dome").innerHTML = pos.map((p, i) => `<b style="left:${p[0]}px;top:${p[1]}px;--c:${CAPC[i]};transform:rotate(${(i*47)%90-45}deg)"></b>`).join("");
 }
+const wait = ms => new Promise(r => setTimeout(r, ms));
 function showCoupon(r){
   ST = r;
   $("cShop").textContent = r.shop || "";
   $("cCode").textContent = r.code || "";
   $("cName").textContent = r.shop || ""; $("cAddr").textContent = r.shop_addr || "";
   $("cTel").innerHTML = r.shop_tel ? ` · <a href="tel:${r.shop_tel.replace(/\D/g,"")}">☎ ${r.shop_tel}</a>` : "";
-  $("cMap").href = "https://map.naver.com/p/search/" + encodeURIComponent("밀양 " + (r.shop || "").replace(/[()]/g, " "));
+  $("cMap").href = "https://map.naver.com/p/search/" + encodeURIComponent(r.shop_map || ("경남 밀양시 " + (r.shop_addr || "").replace(/^밀양시\s*/, "").replace(/\s*\(.*?\)/g, "").replace(/,\s*\d+층/, "")));
   $("cWho").textContent = `${r.name}님 · ****-${r.ph4}`;
   const used = !!r.used;
   $("cpn").classList.toggle("used", used); $("cUsed").classList.toggle("hidden", !used);
@@ -186,8 +205,8 @@ $("btnLogin").onclick = async () => {
     ME = { name, phone }; $("testBar").classList.toggle("hidden", !r.test);
     if(r.drawn) return showCoupon(r);
     $("hello").textContent = `${r.name}님, 반갑습니다`;
-    drawWheel(r.shops || []); ST = r; $("btnSpin").disabled = false; $("spinErr").textContent = "";
-    $("wheel").style.transition = "none"; rot = 0; $("wheel").style.transform = "rotate(0deg)";
+    fillDome(); ST = r; $("btnSpin").disabled = false; $("btnSpin").classList.remove("hidden"); $("spinErr").textContent = "";
+    $("reveal").classList.add("hidden"); $("cap").className = "cap"; $("knob").className = "knob"; $("dome").className = "dome";
     show("secWheel");
   }catch(e){ $("err").textContent = e.message; }
   finally{ $("btnLogin").disabled = false; }
@@ -195,14 +214,17 @@ $("btnLogin").onclick = async () => {
 $("btnSpin").onclick = async () => {
   $("btnSpin").disabled = true; $("spinErr").textContent = "";
   try{
-    const r = await rpc("rsv_cpn_draw", { p_name:ME.name, p_phone:ME.phone });
-    if(!r.ok || !r.drawn){ $("spinErr").textContent = r.msg || "룰렛을 돌리지 못했습니다."; $("btnSpin").disabled = false; return; }
-    const names = ST.shops || [], i = Math.max(0, names.indexOf(r.shop)), n = names.length || 1;
-    const seg = 360 / n, target = 360 - (i + .5) * seg + (Math.random() - .5) * seg * .6;
-    rot = 360 * 6 + target;
-    $("wheel").style.transition = ""; requestAnimationFrame(() => $("wheel").style.transform = `rotate(${rot}deg)`);
-    setTimeout(() => { alert(`🎉 ${r.shop} 상품권(9,900원)에 당첨되었습니다!`); showCoupon(r); }, 4500);
-  }catch(e){ $("spinErr").textContent = e.message; $("btnSpin").disabled = false; }
+    const req = rpc("rsv_cpn_draw", { p_name:ME.name, p_phone:ME.phone });
+    $("dome").classList.add("shake"); $("knob").classList.add("turn");
+    const [r] = await Promise.all([req, wait(1400)]);
+    $("dome").classList.remove("shake");
+    if(!r.ok || !r.drawn){ $("spinErr").textContent = r.msg || "뽑기를 하지 못했습니다."; $("btnSpin").disabled = false; $("knob").className = "knob"; return; }
+    $("cap").className = "cap drop"; await wait(800);
+    $("cap").className = "cap wob"; await wait(950);
+    $("cap").className = "cap open"; await wait(450);
+    $("btnSpin").classList.add("hidden"); $("rvShop").textContent = r.shop; $("reveal").classList.remove("hidden");
+    $("btnGo").onclick = () => showCoupon(r);
+  }catch(e){ $("spinErr").textContent = e.message; $("btnSpin").disabled = false; $("dome").classList.remove("shake"); }
 };
 $("btnUse").onclick = async () => {
   if(!confirm(`정말 사용하시겠습니까?\n\n${ST.shop} · 9,900원\n사용 처리 후에는 되돌릴 수 없습니다.`)) return;
