@@ -179,6 +179,13 @@
           <button class="b gold" type="button" id="vXls">전체 명단 엑셀 내려받기 (번호·교환 현황)</button>
           <button class="b" type="button" id="vXlsLeft">미교환자만 엑셀 내려받기 (이름·전화번호)</button></div>
       </div>
+      <div class="card hidden" id="cAdmin">
+        <h3 style="margin-top:0">온라인 쿠폰 (미교환 40명 · 룰렛)</h3>
+        <p class="muted" style="margin:0 0 8px">주소: <b>/coupon</b> · 유효기간 2027. 4. 30. · 업체가 손님 화면에서 [업체 확인]을 누르면 사용 처리됩니다.</p>
+        <div id="cShops"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="b ghost" type="button" id="cReload">새로고침</button>
+          <button class="b gold" type="button" id="cXls">온라인 쿠폰 엑셀 (업체 정산용)</button></div>
+      </div>
     </section>
 
     <!-- 운영일 -->
@@ -765,7 +772,7 @@ async function loadVch(){
   $("vDate").textContent = r.op_date ? dLabel(r.op_date) : "(설정 전)";
   $("vKpis").innerHTML = [["대상", n0(r.total) + "명", "10/24 예약자(취소 제외)"], ["링크로 받음", n0(r.claimed) + "명", "교환권 화면 발급"], ["교환 완료", n0(r.redeemed) + "장", "상품권 지급"], ["남음", n0(r.total - r.redeemed) + "명", "아직 교환 안 함"]]
     .map(([l,v,t]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${t}</div></div>`).join("");
-  if(ROLE === "admin" && r.link_key){ $("vAdmin").classList.remove("hidden"); $("vLink").value = `${location.origin}/voucher?k=${r.link_key}`; $("vPhones").value = r.phones || ""; }
+  if(ROLE === "admin" && r.link_key){ $("vAdmin").classList.remove("hidden"); $("vLink").value = `${location.origin}/voucher?k=${r.link_key}`; $("vPhones").value = r.phones || ""; } if(ROLE === "admin") loadCpn();
   const items = q ? r.items : r.items.filter(x => !x.redeemed_at).slice(0, 30);
   $("vList").innerHTML = (q ? "" : `<p class="muted">검색하지 않으면 아직 교환하지 않은 분 중 30명만 보입니다.</p>`) + items.map(x => `<div class="card" style="margin-bottom:8px">
       <div class="fc"><div><b style="font-size:18px">${esc(x.name || "")}</b> <span class="muted">${esc(x.phone || "")}${x.seq > 1 ? " · 동반자" : " · 대표자"}</span><br>
@@ -798,6 +805,23 @@ $("vXlsLeft").onclick = async () => {
   const rows = left.map((x, i) => ({ "번호":i+1, "이름":x.name || "", "전화번호":x.phone || "(번호 없음)" }));
   saveXls([["미교환자", rows]], `별빛정원_10월24일_보상_미교환자_${new Date().toISOString().slice(0,10)}.xlsx`);
   toast(`미교환 ${left.length}명을 내려받았습니다.`);
+};
+async function loadCpn(){
+  const r = await rpc("rsv_admin_cpn", { p_key:KEY }); if(!r.ok) return; r.shops = r.shops.filter(x => x.quota || x.drawn);
+  $("cAdmin").classList.remove("hidden");
+  const t = r.shops.reduce((a, x) => ({ q:a.q + x.quota, d:a.d + x.drawn, u:a.u + x.used }), { q:0, d:0, u:0 });
+  $("cShops").innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:15px"><tr style="text-align:left"><th>업체</th><th>배정</th><th>뽑힘</th><th>사용</th></tr>`
+    + r.shops.map(x => `<tr><td>${esc(x.name)}</td><td>${x.quota}</td><td>${x.drawn}</td><td>${x.used}</td></tr>`).join("")
+    + `<tr style="font-weight:800;border-top:1px solid #ccc"><td>합계</td><td>${t.q}</td><td>${t.d}</td><td>${t.u}</td></tr></table>`;
+  return r;
+}
+$("cReload").onclick = loadCpn;
+$("cXls").onclick = async () => {
+  const r = await loadCpn(); if(!r) return alert("관리자만 볼 수 있습니다.");
+  const rows = r.items.map((x, i) => ({ "번호":i+1, "이름":x.name, "전화번호":x.phone, "업체":x.shop || "(아직 안 뽑음)", "쿠폰 번호":x.code || "",
+    "뽑은 시각":x.drawn_at ? kstS(x.drawn_at) : "", "사용 시각":x.used_at ? kstS(x.used_at) : "" }));
+  const shops = r.shops.map(x => ({ "업체":x.name, "배정":x.quota, "뽑힘":x.drawn, "사용":x.used, "정산 금액(원)":x.used * 9900 }));
+  saveXls([["업체별", shops], ["쿠폰 명단", rows]], `별빛정원_우천보상_온라인쿠폰_${new Date().toISOString().slice(0,10)}.xlsx`);
 };
 $("vXls").onclick = async () => {
   const r = await rpc("rsv_admin_vouchers", { p_key:KEY, p_q:null });
